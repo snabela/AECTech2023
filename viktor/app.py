@@ -3,7 +3,7 @@ from pathlib import Path
 from viktor import ViktorController, File
 from viktor.geometry import GeoPoint
 from viktor.parametrization import ViktorParametrization, Page, GeoPointField, Tab, OptionField
-from viktor.views import MapView, MapResult, MapPoint, GeometryView, GeometryResult
+from viktor.views import MapView, MapResult, MapPoint, GeometryView, GeometryResult, WebView, WebResult
 
 
 class Parametrization(ViktorParametrization):
