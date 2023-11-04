@@ -79,11 +79,11 @@ def calculate_floor_mass(story_floor_area, SD, SW, LL):
 def get_seismic_force(story_elevations, story_floor_area, SD, SW, LL, R, latitude, longitude, code, riskCategory,siteClass, spectrum_type=None, T_optional = None):
     '''
     Parameters for get_seismic_force function:
-    story_elevations: list of story elevations in ft
+    story_elevations: list of story elevations in ft from top floor to bottom floor. do not include ground floor elevation
     story_floor_area: list of story floor areas in ft2
-    SD: design dead load in psf
-    SW: self weight load in psf
-    LL: design live load in psf
+    SD: design dead load in psf assumed the same for each floor
+    SW: self weight load in psf assumed the same for each floor
+    LL: design live load in psf assumed the same for each floor
     R: seismic response coefficient
     latitude: latitude of the site
     longitude: longitude of the site
