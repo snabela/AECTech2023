@@ -47,5 +47,5 @@ class Controller(ViktorController):
 
     @WebView('3D Map page-Wen', duration_guess=1)
     def get_web_view(self, params, **kwargs):
-        html_path = Path(__file__).parent / 'detailedmap_3d.html'
+        html_path = Path(__file__).parent / 'map_3d.html'
         return WebResult.from_path(html_path)
