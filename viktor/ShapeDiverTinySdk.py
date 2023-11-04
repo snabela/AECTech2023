@@ -290,14 +290,16 @@ class ShapeDiverTinySessionSdk:
 
     @ExceptionHandler
     @ParameterMapper
-    def export(self, *, exportId, paramDict = {}):
+    def export(self, *, exportIds, paramDict = {}, includeOutputs = False):
         """Request an export
 
         API documentation: https://sdr7euc1.eu-central-1.shapediver.com/api/v2/docs/#/export/put_api_v2_session__sessionId__export
         """
 
         endpoint = f'{self.modelViewUrl}/api/v2/session/{self.response.sessionId()}/export'
-        body = {'exports': [exportId], 'parameters': paramDict}
+        body = {'exports': exportIds, 'parameters': paramDict}
+        if includeOutputs:
+            body['outputs'] = (output['id'] for output in self.response.outputs())
         jsonBody = json.dumps(body)
         headers = {
             'Content-Type': 'application/json'
