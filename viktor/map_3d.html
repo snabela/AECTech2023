@@ -14,9 +14,6 @@
 
     // Create the viewer.
     const viewer = new Cesium.Viewer('cesiumContainer', {
-		//baseLayer: Cesium.ImageryLayer.fromWorldImagery({
-		//style: Cesium.IonWorldImageryStyle.AERIAL_WITH_LABELS,
-	  //}),
       imageryProvider: new Cesium.UrlTemplateImageryProvider({url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"}),
       terrainProvider: new Cesium.ArcGISTiledElevationTerrainProvider({
 		url:

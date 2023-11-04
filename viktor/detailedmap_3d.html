@@ -21,11 +21,13 @@
 
    // Create the viewer.
    const viewer = new Cesium.Viewer("cesiumContainer", {
-     imageryProvider: false,
-     baseLayerPicker: false,
+     imageryProvider: new Cesium.UrlTemplateImageryProvider({url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"}),
+     terrainProvider: new Cesium.ArcGISTiledElevationTerrainProvider({
+		url:
+		  "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer",
+	  }),
+	 baseLayerPicker: false,
      requestRenderMode: true,
-     geocoder: false,
-     globe: false,
    });
 
    // Add 3D Tiles tileset.
