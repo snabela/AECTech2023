@@ -14,7 +14,10 @@
 
     // Create the viewer.
     const viewer = new Cesium.Viewer('cesiumContainer', {
-      imageryProvider: imageryProvider: new Cesium.ArcGisMapServerImageryProvider({url: https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer"})
+		baseLayer: Cesium.ImageryLayer.fromWorldImagery({
+		style: Cesium.IonWorldImageryStyle.AERIAL_WITH_LABELS,
+	  }),
+      imageryProvider: false,
       baseLayerPicker: false,
       geocoder: false,
       globe: false,
