@@ -13,8 +13,16 @@ class Parametrization(ViktorParametrization):
     geometry = Page('Geometry', views='get_geometry_view')
     # TODO add necessary input parameters
 
+    # /// The following code is for the 3D map
     google = Page('Google 3D')
-    # TODO add necessary input parameters
+
+    class Controller(ViktorController):
+        @WebView('3D Map page-Wen', duration_guess=1)
+        def get_web_view(self, params, **kwargs):
+            html_path = Path(__file__).parent / 'map_3d.html'
+            return WebResult.from_path(html_path)
+
+    # /// The code above is for the 3D map
 
     structural = Page('Structural')
     structural.wind = Tab('Wind')
@@ -31,7 +39,6 @@ class Controller(ViktorController):
 
     @MapView('Map', duration_guess=1)
     def get_map_view(self, params, **kwargs):
-
         lat = params.location.center.lat
         lon = params.location.center.lon
 
@@ -44,6 +51,6 @@ class Controller(ViktorController):
     def get_geometry_view(self, params, **kwargs):
         # TODO integrate with ShapeDiver
 
-        geometry = File.from_url("https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/CesiumMilkTruck/glTF-Binary/CesiumMilkTruck.glb")
+        geometry = File.from_url(
+            "https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/CesiumMilkTruck/glTF-Binary/CesiumMilkTruck.glb")
         return GeometryResult(geometry)
-    
