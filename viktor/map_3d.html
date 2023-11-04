@@ -17,7 +17,7 @@
 		baseLayer: Cesium.ImageryLayer.fromWorldImagery({
 		style: Cesium.IonWorldImageryStyle.AERIAL_WITH_LABELS,
 	  }),
-      imageryProvider: false,
+      imageryProvider: imageryProvider: new Cesium.ArcGisMapServerImageryProvider({url: https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer"}),
       baseLayerPicker: false,
       geocoder: false,
       globe: false,
