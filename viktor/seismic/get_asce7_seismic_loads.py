@@ -4,6 +4,7 @@ import os
 import numpy as np
 import plotly.graph_objects as go
 import pandas as pd
+import csv
 
 def fetch_usgs_data(latitude, longitude, code,riskCategory, siteClass):
     
@@ -19,7 +20,26 @@ def fetch_usgs_data(latitude, longitude, code,riskCategory, siteClass):
     if response.status_code == 200:
         data = response.json()
         
-        #seismic_data = data['response']['data']['sds']['sd1']['ss']['s1']
+        seismic_data = {
+            'sds': data['response']['data']['sds'],
+            'sd1': data['response']['data']['sd1'],
+            'ss': data['response']['data']['ss'],
+            's1': data['response']['data']['s1'],
+            'short_period': data['response']['data']['ts'],
+            'long_period': data['response']['data']['tl']
+        }
+
+        # Write data to CSV file
+
+        # with open('seismic_data.csv', mode='w', newline='') as file:
+        #     writer = csv.writer(file)
+        #     writer.writerow(['seismic_parameter', 'value'])
+        #     writer.writerow(['sds', sds])
+        #     writer.writerow(['sd1', sd1])
+        #     writer.writerow(['ss', ss])
+        #     writer.writerow(['s1', s1])
+        #     writer.writerow(['short_period', short_period])
+        #     writer.writerow(['long_period', long_period])
 
         multi_period_design_spectrum = None
         multi_period_mce_earthquake = None
@@ -47,7 +67,7 @@ def fetch_usgs_data(latitude, longitude, code,riskCategory, siteClass):
         two_period_mce_spectrum_df.columns = ['period', 'acceleration']
 
 
-        return multiperiod_design_spectrum_df, multiperiod_mce_spectrum_df, two_period_design_spectrum_df, two_period_mce_spectrum_df          
+        return multiperiod_design_spectrum_df, multiperiod_mce_spectrum_df, two_period_design_spectrum_df, two_period_mce_spectrum_df, seismic_data
     else:
         print('Error accessing website')
 
@@ -57,11 +77,35 @@ def calculate_floor_mass(story_floor_area, SD, SW, LL):
     return floor_mass
 
 def get_seismic_force(story_elevations, story_floor_area, SD, SW, LL, R, latitude, longitude, code, riskCategory,siteClass, spectrum_type=None, T_optional = None):
-    
+    '''
+    Parameters for get_seismic_force function:
+    story_elevations: list of story elevations in ft
+    story_floor_area: list of story floor areas in ft2
+    SD: design dead load in psf
+    SW: self weight load in psf
+    LL: design live load in psf
+    R: seismic response coefficient
+    latitude: latitude of the site
+    longitude: longitude of the site
+    code: code to be used for seismic design
+    riskCategory: risk category of the building
+    siteClass: site class of the building
+    spectrum_type: type of spectrum to be used for seismic design
+    T_optional: optional parameter to specify the period of the structure i.e. from ETABS or SAP2000
+
+    Output of get_seismic_force function:
+    story_seismic_loads: list of seismic loads for each story in kips
+    seimsic_shear_story_plot: list of shear story values for plotting
+    seismic_shear_elevation_plot: list of shear elevation values for plotting
+    seismic_data: dictionary of seismic parameters from USGS (sds, sd1, ss, s1, short_period, long_period)
+    '''
+
+
     total_height = story_elevations[0] - story_elevations[-1]
     T = 0.016*(total_height**0.7)
 
-    multiperiod_design_spectrum_df, multiperiod_mce_spectrum_df, two_period_design_spectrum_df, two_period_mce_spectrum_df = fetch_usgs_data(latitude, longitude, code, riskCategory,siteClass)
+    multiperiod_design_spectrum_df, multiperiod_mce_spectrum_df, two_period_design_spectrum_df, two_period_mce_spectrum_df, seismic_data = fetch_usgs_data(latitude, longitude, code, riskCategory,siteClass)
+    
     num_stories = len(story_floor_area)
 
     if spectrum_type is None:
@@ -132,7 +176,7 @@ def get_seismic_force(story_elevations, story_floor_area, SD, SW, LL, R, latitud
     fig.update_layout(title='Shear Story vs Elevation', xaxis_title='Shear Story (kips)', yaxis_title='Elevation (ft)', xaxis=dict(range=[0, max(shear_story)]), yaxis=dict(range=[0, max(story_elevations)]))
     fig.show()
     
-    return story_seismic_loads, seimsic_shear_story_plot, seismic_shear_elevation_plot
+    return story_seismic_loads, seimsic_shear_story_plot, seismic_shear_elevation_plot, seismic_data
 
 if __name__ == '__main__':
     folder_path = os.path.dirname(os.path.abspath(__file__))
