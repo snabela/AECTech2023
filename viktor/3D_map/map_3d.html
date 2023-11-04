@@ -25,11 +25,14 @@
     });
 
     // Add 3D Tiles tileset.
-    const tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-      url: "https://tile.googleapis.com/v1/3dtiles/root.json?key=AIzaSyC5aJ5Z0Popy3TXC9qJBp2Au6jNVCcRAiA",
-      // This property is needed to appropriately display attributions
-      // as required.
-      showCreditsOnScreen: true,
-    }));
+    try {
+		const tileset = await Cesium.createGooglePhotorealistic3DTileset();
+		viewer.scene.primitives.add(tileset);
+		} catch (error) {
+		console.log(`Failed to load tileset: ${error}`);
+		}
+		
+    showCreditsOnScreen: true,
+    //}));
   </script>
 </body>
