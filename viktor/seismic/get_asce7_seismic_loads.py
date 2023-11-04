@@ -19,6 +19,8 @@ def fetch_usgs_data(latitude, longitude, code,riskCategory, siteClass):
     if response.status_code == 200:
         data = response.json()
         
+        #seismic_data = data['response']['data']['sds']['sd1']['ss']['s1']
+
         multi_period_design_spectrum = None
         multi_period_mce_earthquake = None
 
@@ -29,8 +31,6 @@ def fetch_usgs_data(latitude, longitude, code,riskCategory, siteClass):
         two_period_design_spectrum = data['response']['data']['twoPeriodDesignSpectrum']
         two_period_mce_spectrum = data['response']['data']['twoPeriodMCErSpectrum']
 
-        file_path = os.path.join(folder_path, 'asce7_seismic_loads.json')
-        import pandas as pd
 
         # convert multi_period_design_spectrum to a pandas dataframe
         
@@ -113,13 +113,26 @@ def get_seismic_force(story_elevations, story_floor_area, SD, SW, LL, R, latitud
         current_shear_story+=story_load
         shear_story.append(current_shear_story)
     
-    # Plot the shear story
+    # Initialize lists to store shear story and elevation data
+    seimsic_shear_story_plot = []
+    seismic_shear_elevation_plot = []
+    story_elevations.append(0)
+    for i in range(len(shear_story)):
+        seimsic_shear_story_plot.append(shear_story[i])
+        seismic_shear_elevation_plot.append(story_elevations[i])
+  
+        if i < (len(story_elevations) - 1):
+            seimsic_shear_story_plot.append(shear_story[i] )
+            seismic_shear_elevation_plot.append(story_elevations[i+1])
+
+
+    # Plot the data
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=shear_story, y=story_elevations, mode='lines+markers'))
-    fig.update_layout(title='Shear Story vs Elevation', xaxis_title='Shear Story (kips)', yaxis_title='Elevation (ft)')
+    fig.add_trace(go.Scatter(x=seimsic_shear_story_plot, y=seismic_shear_elevation_plot, mode='lines+markers'))
+    fig.update_layout(title='Shear Story vs Elevation', xaxis_title='Shear Story (kips)', yaxis_title='Elevation (ft)', xaxis=dict(range=[0, max(shear_story)]), yaxis=dict(range=[0, max(story_elevations)]))
     fig.show()
     
-    return story_seismic_loads
+    return story_seismic_loads, seimsic_shear_story_plot, seismic_shear_elevation_plot
 
 if __name__ == '__main__':
     folder_path = os.path.dirname(os.path.abspath(__file__))
