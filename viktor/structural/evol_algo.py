@@ -1,67 +1,110 @@
-import random
-import math
+def evolutionary_optimizer(story_force_dictionary):
 
-# Constants
-POPULATION_SIZE = 100  # Total number of individuals in the population
-MUTATION_RATE = 0.05  # Probability of a gene mutating
-CROSSOVER_RATE = 0.9  # Probability of crossover happening
-GENERATIONS = 1000  # Number of iterations/generations the algorithm will run for
-GENE_MIN = 0  # Minimum value for a gene (rotation in degrees)
-GENE_MAX = 90  # Maximum value for a gene (rotation in degrees)
+    import mdof_simple_model as mdof
+    import random
 
-def fitness(individual):
-    # Calculate the fitness of an individual.
-    # The fitness function represents the quality of a solution.
-    # Here, we use the negative sine product of rotations to simulate the bounding box problem.
-    x_rotation, y_rotation = individual
-    return -(math.sin(math.radians(x_rotation)) * math.sin(math.radians(y_rotation)))
+    # Constants
+    POPULATION_SIZE = 1000
+    MUTATION_RATE = 0.15
+    CROSSOVER_RATE = 0.9
+    GENERATIONS = 100
+    LENGTH_MIN = 10  # ft
+    LENGTH_MAX = 40  # ft
+    THICKNESS_MIN = 1  # ft
+    THICKNESS_MAX = 3  # ft
+    REINFORCEMENT_RATIO_MIN = 0.0025
+    REINFORCEMENT_RATIO_MAX = 0.02
+    ELEVATIONS = list(story_force_dictionary.keys())
+    CONCRETE_IMPACT_WEIGHT = 0.1
+    REINFORCEMENT_IMPACT_WEIGHT = 1
 
-def crossover(parent1, parent2):
-    # Create two children by combining genes from two parents.
-    # The crossover point is chosen randomly.
-    if random.random() < CROSSOVER_RATE:
-        point = random.randint(0, len(parent1)-1)
-        child1 = parent1[:point] + parent2[point:]
-        child2 = parent2[:point] + parent1[point:]
+    def fitness(individual):
+        # Extract section_dict and reinforcement_ratios
+        section_dict = {z: values[:3] for z, values in individual.items()}
+
+        dcr_results = mdof.mdof_simple_model(story_force_dictionary, section_dict)
+
+        shear_dcr = max(dcr_results['shear_dcr'].values())
+        moment_dcr = max(dcr_results['moment_dcr'].values())
+        drift_dcr = dcr_results['drift_dcr']
+
+        concrete_cumulative_volume = 0
+        reinforcement_cumulative_volume = 0
+        z_prev = 0
+        for z, values in section_dict.items():
+            length, thickness, reinforcement_ratio = values
+            concrete_area = length * thickness * 2 + (length - 2 * thickness) * thickness * 2
+            concrete_cumulative_volume += concrete_area * (z - z_prev)
+
+            reinforcement_cumulative_volume += reinforcement_ratio * concrete_area * (z - z_prev)
+            z_prev = z
+
+        if shear_dcr > 1 or moment_dcr > 1 or drift_dcr > 1:
+            return max(shear_dcr, moment_dcr, drift_dcr) * 100000 + CONCRETE_IMPACT_WEIGHT * concrete_cumulative_volume + REINFORCEMENT_IMPACT_WEIGHT * reinforcement_cumulative_volume
+
+        return abs(1 - shear_dcr) + abs(1 - moment_dcr) + abs(1 - drift_dcr) + CONCRETE_IMPACT_WEIGHT * concrete_cumulative_volume + REINFORCEMENT_IMPACT_WEIGHT * reinforcement_cumulative_volume
+
+    def crossover(parent1, parent2):
+        child1 = {}
+        child2 = {}
+        for z in ELEVATIONS:
+            if random.random() < CROSSOVER_RATE:
+                child1[z] = parent1[z]
+                child2[z] = parent2[z]
+            else:
+                child1[z] = parent2[z]
+                child2[z] = parent1[z]
+
         return child1, child2
-    else:
-        # If no crossover, children are clones of parents.
-        return parent1, parent2
 
-def mutate(individual):
-    # Apply mutations to genes of an individual with a probability of MUTATION_RATE.
-    # The mutation is a random value between -1 and 1 added to the original gene value.
-    # The gene value is constrained between 0 and 90 using modulo operation.
-    return [(gene + (random.uniform(-1, 1) if random.random() < MUTATION_RATE else 0)) % 90 for gene in individual]
+    def mutate(individual):
+        mutated_dict = {}
+        for z, values in individual.items():
+            length, thickness, reinforcement_ratio = values
+            if random.random() < MUTATION_RATE:
+                length += random.choice([-2, 2])  # Change by 2 units to keep it even
+                length = max(LENGTH_MIN, min(LENGTH_MAX, length))  # Ensure within limits
+            if random.random() < MUTATION_RATE:
+                thickness += random.choice([-2, 2])  # Change by 2 units to keep it even
+                thickness = max(THICKNESS_MIN, min(THICKNESS_MAX, thickness))  # Ensure within limits
+            if random.random() < MUTATION_RATE:
+                reinforcement_ratio += random.uniform(-0.001, 0.001)
+                reinforcement_ratio = max(REINFORCEMENT_RATIO_MIN, min(REINFORCEMENT_RATIO_MAX, reinforcement_ratio))
 
-def select(population):
-    # Select the top half of the population based on fitness.
-    # This is a truncation selection method.
-    sorted_population = sorted(population, key=fitness)
-    return sorted_population[:POPULATION_SIZE//2]
+            mutated_dict[z] = [length, thickness, reinforcement_ratio]
+        return mutated_dict
 
-def main():
-    # Main loop of the genetic algorithm.
-    
-    # Initialize a population with random gene values (rotations).
-    population = [[random.uniform(GENE_MIN, GENE_MAX) for _ in range(2)] for _ in range(POPULATION_SIZE)]
-    
+    def select(population):
+        sorted_population = sorted(population, key=fitness)
+        return sorted_population[:POPULATION_SIZE//2]
+
+    # Initialize a population with random gene values.
+    population = []
+    for _ in range(POPULATION_SIZE):
+        individual = {}
+        for z in ELEVATIONS:
+            length = random.choice(range(LENGTH_MIN + LENGTH_MIN % 2, LENGTH_MAX + 1, 2))
+            thickness = random.choice(range(int(THICKNESS_MIN + THICKNESS_MIN % 2), int(THICKNESS_MAX + 1), 2))
+            reinforcement_ratio = random.uniform(REINFORCEMENT_RATIO_MIN, REINFORCEMENT_RATIO_MAX)
+            individual[z] = [length, thickness, reinforcement_ratio]
+        population.append(individual)
+
     for generation in range(GENERATIONS):
-        # Selection: Choose the top individuals based on fitness.
         selected = select(population)
-        
-        # Crossover and Mutation: Generate children from selected individuals.
         children = []
         for i in range(0, len(selected), 2):
             child1, child2 = crossover(selected[i], selected[i+1])
             children.append(mutate(child1))
             children.append(mutate(child2))
-        
-        # Combine selected individuals and their children to form the new population.
+
         population = selected + children
-        
-        # Print the best individual of the current generation.
+
         best = min(population, key=fitness)
         print(f"Generation {generation + 1}: Best individual = {best} with fitness = {fitness(best)}")
 
-main()
+
+if __name__ == "__main__":
+
+    test_story_forces = {0: 0, 10: 100, 20: 200, 30: 300, 40: 400}
+
+    evolutionary_optimizer(test_story_forces)
