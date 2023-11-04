@@ -34,12 +34,12 @@ def get_wind_forces(latitude, longitude, risk_category, floors):
     - tuple: containing the following
         base_x float: Base shear in the X direction
         base_y float: Base shear in the Y direction        
-        story_forces_x dict[float]: dict of story forces in X direction, key = height (z) and val = story force
-        story_forces_y dict[float]: dict of story forces in Y direction, key = height (z) and val = story force
+        story_forces_x list[float]: list of story forces in X direction starting at lowest floor
+        story_forces_y list[float]: list of story forces in Y direction starting at lowest floor
     """
     h = 0
-    story_forces_x = {}
-    story_forces_y = {}
+    story_forces_x = []
+    story_forces_y = []
     base_x = 0
     base_y = 0
     V = get_wind_speed_for_risk(latitude, longitude, risk_category)
@@ -56,8 +56,8 @@ def get_wind_forces(latitude, longitude, risk_category, floors):
         area_y = width_y * h
         force_x = qz*area_x/1000
         force_y = qz*area_y/1000
-        story_forces_x[z] = force_x
-        story_forces_y[z] = force_y
+        story_forces_x.append(force_x)
+        story_forces_y.append(force_y)
         base_x += force_x
         base_y += force_y
     return base_x, base_y, story_forces_x, story_forces_y
@@ -185,7 +185,28 @@ def get_wind_speed(latitude, longitude, server_url='https://gis.asce.org'):
     return wind_speeds
 
 
+def get_story_shears(story_forces):
+    """
+    Get the story shear forces given the story forces
+
+    Inputs:
+    - story_forces list[float]: dict of story forces starting at the lowest floor
+
+    Returns:
+    list[int]: The list of story shears starting at the roof level down
+    """
+    if len(story_forces) == 1:
+        return story_forces
+    last = story_forces[-1]
+    story_shears = [last]
+    for force in story_forces[:-1][::-1]:
+        last += force
+        story_shears.append(last)
+    return story_shears
+
+
 def main(latitude, longitude, risk_category, floors):
     base_x, base_y, story_forces_x, story_forces_y = get_wind_forces(latitude, longitude, risk_category, floors)
+    story_shears_x = get_story_shears(story_forces_x)
+    story_shears_y = get_story_shears(story_forces_y)
     return 0
-
