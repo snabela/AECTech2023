@@ -14,15 +14,19 @@
 
     // Create the viewer.
     const viewer = new Cesium.Viewer('cesiumContainer', {
-		baseLayer: Cesium.ImageryLayer.fromWorldImagery({
-		style: Cesium.IonWorldImageryStyle.AERIAL_WITH_LABELS,
+		//baseLayer: Cesium.ImageryLayer.fromWorldImagery({
+		//style: Cesium.IonWorldImageryStyle.AERIAL_WITH_LABELS,
+	  //}),
+      imageryProvider: new Cesium.UrlTemplateImageryProvider({url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"}),
+      terrainProvider: new Cesium.ArcGISTiledElevationTerrainProvider({
+		url:
+		  "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer",
 	  }),
-      imageryProvider: imageryProvider: new Cesium.ArcGisMapServerImageryProvider({url: https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer"}),
-      baseLayerPicker: false,
-      geocoder: false,
-      globe: false,
+	  baseLayerPicker: false,
+      //geocoder: false,
+      //globe: false,
       // https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/#enabling-request-render-mode
-      requestRenderMode: true,
+      //requestRenderMode: true,
     });
 
     // Add 3D Tiles tileset.
