@@ -71,18 +71,18 @@ def fetch_usgs_data(latitude, longitude, code,riskCategory, siteClass):
     else:
         print('Error accessing website')
 
-def calculate_floor_mass(story_floor_area, SD, SW, LL):
+def calculate_floor_mass(story_floor_area, SD, LL):
     floor_mass = 0
-    floor_mass = (SD + SW + LL)*story_floor_area
+    floor_mass = (SD + LL)*story_floor_area
     return floor_mass
 
-def get_seismic_force(story_elevations, story_floor_area, SD, SW, LL, R, latitude, longitude, code, riskCategory,siteClass, spectrum_type=None, T_optional = None):
+def get_seismic_force(story_data, SD, LL, R, latitude, longitude, code, riskCategory,siteClass, spectrum_type=None, T_optional = None):
     '''
     Parameters for get_seismic_force function:
-    story_elevations: list of story elevations in ft from top floor to bottom floor. do not include ground floor elevation
-    story_floor_area: list of story floor areas in ft2
+    story_data: Tuple of story elevations in ft from top floor to bottom floor. do not include ground floor elevation
+                and of story floor areas in ft2
     SD: design dead load in psf assumed the same for each floor
-    SW: self weight load in psf assumed the same for each floor
+    self weight load in psf assumed the same for each floor
     LL: design live load in psf assumed the same for each floor
     R: seismic response coefficient
     latitude: latitude of the site
@@ -99,13 +99,18 @@ def get_seismic_force(story_elevations, story_floor_area, SD, SW, LL, R, latitud
     seismic_shear_elevation_plot: list of shear elevation values for plotting
     seismic_data: dictionary of seismic parameters from USGS (sds, sd1, ss, s1, short_period, long_period)
     '''
+    story_elevations = []
+    story_floor_area = []
 
+    for story in story_data:
+        story_elevations.append(story[0])
+        story_floor_area.append(story[1])
 
     total_height = story_elevations[0] - story_elevations[-1]
     T = 0.016*(total_height**0.7)
 
     multiperiod_design_spectrum_df, multiperiod_mce_spectrum_df, two_period_design_spectrum_df, two_period_mce_spectrum_df, seismic_data = fetch_usgs_data(latitude, longitude, code, riskCategory,siteClass)
-    
+
     num_stories = len(story_floor_area)
 
     if spectrum_type is None:
@@ -131,7 +136,7 @@ def get_seismic_force(story_elevations, story_floor_area, SD, SW, LL, R, latitud
     
     floor_masses = []
     for area in story_floor_area:
-        floor_mass = calculate_floor_mass(area, SD, SW, LL)
+        floor_mass = calculate_floor_mass(area, SD, LL)
         floor_masses.append(floor_mass)
 
     total_mass = sum(floor_masses)
@@ -179,12 +184,11 @@ def get_seismic_force(story_elevations, story_floor_area, SD, SW, LL, R, latitud
     return story_seismic_loads, seimsic_shear_story_plot, seismic_shear_elevation_plot, seismic_data
 
 if __name__ == '__main__':
-    folder_path = os.path.dirname(os.path.abspath(__file__))
-
     story_elevations = [48, 36, 24, 12] #ft
     story_floor_area = [10000, 10000, 10000, 10000] #ft2
+
+    story_data = [[story_elevations[i], story_floor_area[i]] for i in range(len(story_elevations))]
     SD = 20 # psf
-    SW = 70 # psf
     LL = 100 # psf
     R = 3
     latitude = 40.7128
@@ -192,6 +196,6 @@ if __name__ == '__main__':
     code = 'asce7-22'
     riskCategory = 'III'
     siteClass = 'D'
-    get_seismic_force(story_elevations, story_floor_area, SD, SW, LL, R, 
+    get_seismic_force(story_data, SD, LL, R, 
                       latitude, longitude, code, riskCategory, siteClass, 
                       spectrum_type=None, T_optional = None)
