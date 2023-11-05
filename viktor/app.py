@@ -67,6 +67,8 @@ class Parametrization(ViktorParametrization):
     optimization.button = ActionButton('Perform Preliminary Optimization', method='prelim_optimization')
     optimization.button2 = ActionButton('Send Optimized Solution to Analysis Model', method='send_to_analysis')
 
+    detailedanalysis = Page('Detailed Analysis')
+
     global_optimization = Page('Global Optimization', views='get_optimization')
     global_optimization.min_base_radius = NumberField('Min Base Radius', default=60)
     global_optimization.max_base_radius = NumberField('Max Base Radius', default=200)
