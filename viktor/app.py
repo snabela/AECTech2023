@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import plotly.express as px
 
@@ -14,6 +15,7 @@ from optimization.run_optimization import run_optimization
 from shapediver.ShapeDiverComputation import ShapeDiverComputation
 from structural import evol_algo
 from structural.analysis import base_analysis
+from carbon_and_cost.calculate_carbon_and_cost import calculate_carbon_and_cost
 
 
 def param_site_class_visible(params, **kwargs):
@@ -66,6 +68,13 @@ class Parametrization(ViktorParametrization):
     optimization.maximum_wall_length = IntegerField('Maximum Wall Length (ft)', min=15, max=40, default=30)
     optimization.button = ActionButton('Perform Preliminary Optimization', method='prelim_optimization')
     optimization.button2 = ActionButton('Send Optimized Solution to Analysis Model', method='send_to_analysis')
+
+    carbon_and_cost = Page('Carbon & Cost', views='get_carbon_and_cost')
+    carbon_and_cost.carbon_per_floor_area = NumberField('Carbon per Floor Area', suffix='CO2/m2', flex=50)
+    carbon_and_cost.cost_per_floor_area = NumberField('Cost per Floor Area', suffix='$/m2', flex=50)
+    carbon_and_cost.nl = LineBreak()
+    carbon_and_cost.carbon_per_beam_length = NumberField('Carbon per Beam Length', suffix='CO2/m', flex=50)
+    carbon_and_cost.cost_per_beam_length = NumberField('Cost per Beam Length', suffix='$/m', flex=50)
 
     global_optimization = Page('Global Optimization', views='get_optimization')
     global_optimization.min_base_radius = NumberField('Min Base Radius', default=60)
@@ -144,7 +153,7 @@ class Controller(ViktorController):
         file_content = Storage().get('BUILDING_FLOOR_ELV_AREA', scope='entity')
         return DownloadResult(file_content=file_content, file_name='building_floor_elv_area.json')
 
-    @PlotlyView("Result", duration_guess=1)
+    @PlotlyView("Result", duration_guess=10, update_label='RUN OPTIMIZATION')
     def get_optimization(self, params, **kwargs):
         dimensions = ['Base Radius', 'Peak Radius', 'No Floors', 'Floor to Floor', 'Cost', 'Embodied Carbon']
         df = run_optimization(params, dimensions)
@@ -153,3 +162,11 @@ class Controller(ViktorController):
                                       color_continuous_scale=px.colors.diverging.Tealrose,
                                       color_continuous_midpoint=2)
         return PlotlyResult(fig.to_json())
+
+    @PlotlyAndDataView("Result", duration_guess=1)
+    def get_carbon_and_cost(self, params, **kwargs):
+        building_structure = json.loads(Storage().get('BUILDING_STRUCTURE', scope='entity').getvalue())
+        building_floor_elv_area = json.loads(Storage().get('BUILDING_FLOOR_ELV_AREA', scope='entity').getvalue())
+
+        fig, data = calculate_carbon_and_cost(params, building_structure, building_floor_elv_area)
+        return PlotlyAndDataResult(fig.to_json(), data)
