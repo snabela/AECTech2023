@@ -32,13 +32,23 @@ def base_analysis(params):
 
         if params.structural.tdl and params.structural.tll and params.structural.r_value:
             print(area_height)
-            story_seismic_loads_dict, seimsic_shear_story_plot, seismic_shear_elevation_plot, seismic_data = seismic.get_seismic_force(
+            story_seismic_loads_dict, seismic_shear_story_plot, seismic_shear_elevation_plot, seismic_data = seismic.get_seismic_force(
                 area_height, tdl, tll, r, lat, lon, code, risk_cat, site_class)
             sds = seismic_data['sds']
+            sd1 = seismic_data['sd1']
+            base_shear = seismic_data['base_shear']
         else:
             sds = 0
     else:
         sds = 0
+
+    if params.structural.file_wind:
+        floors = wind.get_building_data(params.structural.file_wind)
+        wind_speed = wind.get_wind_speed(lat, lon, risk_cat)
+        base_x, base_y, story_forces_x, story_forces_y = wind.get_wind_forces(lat, lon, risk_cat, floors)
+        wind_story_shear_plot_x = wind.get_story_shear_plot(story_forces_x)
+        wind_story_shear_plot_y = wind.get_story_shear_plot(story_forces_y)
+        # Use the same elevation plots from seismic
 
     data = DataGroup(
         group_a=DataItem('Location', 'Coordinate', subgroup=DataGroup(
@@ -46,15 +56,15 @@ def base_analysis(params):
             value_b=DataItem('Longitudinal', lon, suffix='°')
         )),
         group_b=DataItem('Wind', 'Demands', subgroup=DataGroup(
-            value_a=DataItem('Wind Pressure', 1, suffix='psf',
-                             explanation_label='this value is the wind pressure value based on building code'),
-            value_b=DataItem('Base Shear', 5000, suffix='kip'),
-            value_c=DataItem('Overturning Moment', 5000, suffix='kip-ft'),
+            value_a=DataItem('Wind Speed', wind_speed, suffix='psf',
+                             explanation_label='this value is the wind speed value based on building code'),
+            value_b=DataItem('Base Shear X', base_x, suffix='kip'),
+            value_c=DataItem('Base Shear Y', base_y, suffix='kip-ft'),
             value_d=DataItem('Max Displacement', 5, suffix='in')
         )),
         group_c=DataItem('Seismic', 'Demands', subgroup=DataGroup(
             value_a=DataItem('Sds', sds, suffix='g'),
-            value_b=DataItem('Base Shear', 5000, suffix='kip'),
+            value_b=DataItem('Base Shear', base_shear / 1000, suffix='kip'),
             value_c=DataItem('Overturning Moment', 5000, suffix='kip-ft'),
             value_d=DataItem('Max Displacement', 5, suffix='in')
         )))
