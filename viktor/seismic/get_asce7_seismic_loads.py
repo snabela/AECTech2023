@@ -181,7 +181,11 @@ def get_seismic_force(story_data, SD, LL, R, latitude, longitude, code, riskCate
     # fig.update_layout(title='Shear Story vs Elevation', xaxis_title='Shear Story (kips)', yaxis_title='Elevation (ft)', xaxis=dict(range=[0, max(shear_story)]), yaxis=dict(range=[0, max(story_elevations)]))
     # fig.show()
     
-    return story_seismic_loads, seimsic_shear_story_plot, seismic_shear_elevation_plot, seismic_data
+    story_seismic_loads_dict = {}
+    for i in range(len(story_seismic_loads)):
+        story_seismic_loads_dict[f"Story {i+1}"] = story_seismic_loads[i]
+    
+    return story_seismic_loads_dict, seimsic_shear_story_plot, seismic_shear_elevation_plot, seismic_data
 
 if __name__ == '__main__':
     story_elevations = [48, 36, 24, 12] #ft
