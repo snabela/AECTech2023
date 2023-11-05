@@ -1,8 +1,4 @@
-import json
 from pathlib import Path
-import plotly.graph_objects as go
-from seismic import  get_asce7_seismic_loads as seismic
-from wind import get_asce7_wind_loads as wind
 
 from viktor import ViktorController
 from viktor.core import Storage
