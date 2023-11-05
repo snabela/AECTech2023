@@ -35,7 +35,8 @@
 
     // Point the camera at a specific location
     viewer.scene.camera.setView({
-      destination: Cesium.Cartesian3.fromDegrees(-122.084143, 37.422069, 2000),
+      // static longitude and latitude
+      destination: Cesium.Cartesian3.fromDegrees(-73.985685, 40.748817, 250),
       orientation: {
         heading: Cesium.Math.toRadians(45),
         pitch: 0,
