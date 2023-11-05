@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<head>
+ <meta charset="utf-8" />
+ <title>CesiumJS 3D Tiles Places API Integration Demo</title>
+ <script src="https://ajax.googleapis.com/ajax/libs/cesiumjs/1.105/Build/Cesium/Cesium.js"></script>
+ <link href="https://ajax.googleapis.com/ajax/libs/cesiumjs/1.105/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+</head>
+<body>
+ <label for="pacViewPlace">Go to a place: </label>
+ <input
+   type="text"
+   id="pacViewPlace"
+   name="pacViewPlace"
+   placeholder="Enter a location..."
+   style="width: 300px"
+ />
+ <div id="cesiumContainer"></div>
+ <script>
+   // Enable simultaneous requests.
+   Cesium.RequestScheduler.requestsByServer["tile.googleapis.com:443"] = 18;
+
+   // Create the viewer.
+   const viewer = new Cesium.Viewer("cesiumContainer", {
+     imageryProvider: false,
+     baseLayerPicker: false,
+     requestRenderMode: true,
+     geocoder: false,
+     globe: false,
+   });
+
+   // Add 3D Tiles tileset.
+   const tileset = viewer.scene.primitives.add(
+     new Cesium.Cesium3DTileset({
+       url: "https://tile.googleapis.com/v1/3dtiles/root.json?key=AIzaSyC5aJ5Z0Popy3TXC9qJBp2Au6jNVCcRAiA",
+       // This property is required to display attributions as required.
+       showCreditsOnScreen: true,
+     })
+   );
+
+   const zoomToViewport = (viewport) => {
+     viewer.entities.add({
+       polyline: {
+         positions: Cesium.Cartesian3.fromDegreesArray([
+           viewport.getNorthEast().lng(), viewport.getNorthEast().lat(),
+           viewport.getSouthWest().lng(), viewport.getNorthEast().lat(),
+           viewport.getSouthWest().lng(), viewport.getSouthWest().lat(),
+           viewport.getNorthEast().lng(), viewport.getSouthWest().lat(),
+           viewport.getNorthEast().lng(), viewport.getNorthEast().lat(),
+         ]),
+         width: 10,
+         clampToGround: true,
+         material: Cesium.Color.RED,
+       },
+     });
+     viewer.flyTo(viewer.entities);
+   };
+
+   function initAutocomplete() {
+     const autocomplete = new google.maps.places.Autocomplete(
+       document.getElementById("pacViewPlace"),
+       {
+         fields: [
+           "geometry",
+           "name",
+         ],
+       }
+     );
+     autocomplete.addListener("place_changed", () => {
+       viewer.entities.removeAll();
+       const place = autocomplete.getPlace();
+       if (!place.geometry || !place.geometry.viewport) {
+         window.alert("No viewport for input: " + place.name);
+         return;
+       }
+       zoomToViewport(place.geometry.viewport);
+     });
+   }
+ </script>
+ <script
+   async=""
+   src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC5aJ5Z0Popy3TXC9qJBp2Au6jNVCcRAiA&libraries=places&callback=initAutocomplete"
+ ></script>
+</body>
