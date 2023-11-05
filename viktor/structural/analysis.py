@@ -66,7 +66,8 @@ def base_analysis(params):
             base_shear = seismic_data['base_shear']
 
     if params.structural.file_wind:
-        floors = wind.get_building_data(params.structural.file_wind)
+        json_file = params.structural.file_wind.file
+        floors = wind.get_building_data(json_file)
         wind_speed = wind.get_wind_speed(lat, lon, risk_cat)
         base_x, base_y, story_forces_x, story_forces_y = wind.get_wind_forces(lat, lon, risk_cat, floors)
         wind_story_shear_plot_x = wind.get_story_shear_plot(story_forces_x)

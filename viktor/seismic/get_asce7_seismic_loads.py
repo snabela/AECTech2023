@@ -130,6 +130,9 @@ def get_seismic_force(story_data, SD, LL, R, latitude, longitude, code, riskCate
 
     # Drop the last row
     # df = df.drop(df.index[-1])
+    # Convert the 'area' and 'elev' columns into lists
+    # story_floor_area = df['area'].tolist()
+    # story_elevations = df['elev'].tolist()
 
     # Calculate T
 
