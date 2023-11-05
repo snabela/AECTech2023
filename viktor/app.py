@@ -8,6 +8,7 @@ from viktor.parametrization import ViktorParametrization, Page, GeoPointField, T
 from viktor.views import MapView, MapResult, MapPoint, GeometryView, GeometryResult, WebView, WebResult, DataView, DataResult, DataGroup, DataItem, PlotlyAndDataResult, PlotlyAndDataView
 from ShapeDiverComputation import ShapeDiverComputation
 from structural import evol_algo
+from viktor.core import Storage
 
 def param_site_class_visible(params, **kwargs):
     if params.structural.code and params.structural.code.lower().startswith('asce7'):
@@ -120,7 +121,8 @@ class Controller(ViktorController):
         #         print(line.strip())
         if params.structural.file_seismic:
             area_height = []
-            for line in params.structural.file_seismic.file.open():
+            # line in params.structural.file_seismic.file.open():
+            for line in Storage().get('BUILDING_FLOOR_ELV_AREA',scope = 'entity').open():
                 line = line.strip()
                 area_height_data = line.split(',')
                 if len(area_height_data)>1:
