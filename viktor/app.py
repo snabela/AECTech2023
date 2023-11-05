@@ -132,6 +132,8 @@ class Controller(ViktorController):
                 print(area_height)
                 story_seismic_loads_dict, seimsic_shear_story_plot, seismic_shear_elevation_plot, seismic_data = seismic.get_seismic_force(area_height,tdl,tll,r,lat,lon,code,risk_cat,site_class)
                 sds = seismic_data['sds']
+                sd1 = seismic_data['sd1']
+                base_shear = seismic_data['base_shear']
             else:
                 sds = 0
         else:
@@ -150,7 +152,7 @@ class Controller(ViktorController):
             )),
             group_c=DataItem('Seismic', 'Demands', subgroup=DataGroup(
                 value_a=DataItem('Sds', sds, suffix='g'),
-                value_b=DataItem('Base Shear', 5000, suffix='kip'),
+                value_b=DataItem('Base Shear', base_shear/1000, suffix='kip'),
                 value_c=DataItem('Overturning Moment', 5000, suffix='kip-ft'),
                 value_d=DataItem('Max Displacement', 5, suffix='in')
             )))
