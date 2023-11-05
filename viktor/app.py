@@ -134,15 +134,13 @@ class Controller(ViktorController):
                                                 parameters.minimum_wall_length, 
                                                 parameters.maximum_wall_length)
         print(best_result)
-        data_file = File.from_data(data)
-        data_content = data_file.getvalue_binary()
-        optimized_corewall = Storage().set('OPTIMIZED_COREWALL', data=data_content, scope='entity')
+        #optimized_corewall = Storage().set('OPTIMIZED_COREWALL', data=data, scope='entity')
 
 
     @PlotlyAndDataView("OUTPUT", duration_guess=5)
     def structural_base_analysis(self, params, **kwargs):
         fig, data = base_analysis(params)
-        Storage().set('building_forces', data=data, scope='entity')
+        Storage().set('BUILDING_FORCES', data=data, scope='entity')
         return PlotlyAndDataResult(fig.to_json(), data)
     
     def send_to_analysis(self, params, **kwargs):
