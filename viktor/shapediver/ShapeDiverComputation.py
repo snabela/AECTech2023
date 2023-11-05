@@ -1,12 +1,13 @@
-from ShapeDiverTinySdkViktorUtils import ShapeDiverTinySessionSdkMemoized
 from viktor.core import Storage
-from viktor import File, UserMessage
+from viktor import File, UserMessage, UserError
 import os
 
 # ShapeDiver ticket and modelViewUrl
+from shapediver.ShapeDiverTinySdkViktorUtils import ShapeDiverTinySessionSdkMemoized
+
 ticket = os.getenv("SD_TICKET")
 if ticket is None or len(ticket) == 0:
-    ticket = "36cdfeb2dbf22539f4dd18593c2c0df2f1ae5f244078fdc784e72deb6b95601e09903a76c02e499314595a1e77d622dd93110b9cb58b3f48c9ff315e7cb406663f7c98855823a66b9b0ad099fe98e845d01cb851e182dba9e1c5f833d8ab2b7772c9255399decda02c33e8cd0f6b4165c6154d54216af0b1-7aae369e1e8a0c95a29d4c4060daee89"
+    ticket = "567ca9d3794efdaf984a64f8410656443d7bfbfb8dd358a00c392d78b62bc0f32b22f6a2d9a9cf5ec92ba4de82ca5a60f91b2339100f9136e43509a4b34276fac32da1f35227c2167685b3436de987579f76b7e8fa62417a450d51233e390ed954969a99c95f342aeff027c72364700afe02500b99d00026-0cfb869c3094ede7c31fa4c242b5278a"
 modelViewUrl = os.getenv("SD_MODEL_VIEW_URL")
 if modelViewUrl is None or len(modelViewUrl) == 0:
     modelViewUrl = "https://nsc005.us-east-1.shapediver.com"
@@ -15,7 +16,7 @@ if modelViewUrl is None or len(modelViewUrl) == 0:
 def ShapeDiverComputation(parameters):
  
     # Initialize a session with the model (memoized)
-    shapeDiverSessionSdk = ShapeDiverTinySessionSdkMemoized(ticket, modelViewUrl)
+    shapeDiverSessionSdk = ShapeDiverTinySessionSdkMemoized(ticket, modelViewUrl, forceNewSession = True)
 
     # compute outputs and exports of ShapeDiver model at the same time, 
     # get resulting glTF 2 assets and export assets
