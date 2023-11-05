@@ -69,8 +69,7 @@ class Parametrization(ViktorParametrization):
     optimization.maximum_wall_length = IntegerField('Maximum Wall Length (ft)', min=15, max=40, default=30)
     optimization.button = ActionButton('Perform Preliminary Optimization', method='prelim_optimization')
 
-    #concrete_embodied_carbon = calculate_embodied_carbon.calculate_embodied_carbon_concrete(concrete_volume)
-    #reinforcement_embodied_carbon = calculate_embodied_carbon.calculate_embodied_carbon_reinforcement(reinforcement_volume)
+
 
     optimization.button2 = ActionButton('Send Optimized Solution to Analysis Model', method='send_to_analysis')
 
@@ -127,19 +126,23 @@ class Controller(ViktorController):
     def prelim_optimization(self, params, **kwargs):
         ## TODO remove test_story_forces
         parameters = params.optimization
-
+        #building_forces = Storage().get('building_forces', scope='entity')
         test_story_forces = {0: 0, 10: parameters.story_forces, 20: parameters.story_forces, 30: parameters.story_forces, 40: parameters.story_forces}
-        wall_section = evol_algo.evolutionary_optimizer(test_story_forces, 
-                                                        parameters.minimum_wall_thickness, 
-                                                        parameters.maximum_wall_thickness, 
-                                                        parameters.minimum_wall_length, 
-                                                        parameters.maximum_wall_length)
-        print(wall_section)
-        return wall_section
+        best_result, data = evol_algo.evolutionary_optimizer(test_story_forces, 
+                                                parameters.minimum_wall_thickness, 
+                                                parameters.maximum_wall_thickness, 
+                                                parameters.minimum_wall_length, 
+                                                parameters.maximum_wall_length)
+        print(best_result)
+        data_file = File.from_data(data)
+        data_content = data_file.getvalue_binary()
+        optimized_corewall = Storage().set('OPTIMIZED_COREWALL', data=data_content, scope='entity')
+
 
     @PlotlyAndDataView("OUTPUT", duration_guess=5)
     def structural_base_analysis(self, params, **kwargs):
         fig, data = base_analysis(params)
+        Storage().set('building_forces', data=data, scope='entity')
         return PlotlyAndDataResult(fig.to_json(), data)
     
     def send_to_analysis(self, params, **kwargs):

@@ -5,7 +5,10 @@ def evolutionary_optimizer(story_force_dictionary, min_wall_thickness, max_wall_
     '''
 
     from structural import mdof_simple_model as mdof
+    from structural import calculate_embodied_carbon
     import random
+    from viktor.core import Storage
+    from viktor.views import DataGroup, DataItem
 
     # Constants
     POPULATION_SIZE = 1000 # Number of individuals in the population
@@ -129,14 +132,36 @@ def evolutionary_optimizer(story_force_dictionary, min_wall_thickness, max_wall_
             print(f"Stopping early: No improvement for {EARLY_STOPPING_GENERATIONS} generations.")
             break
 
+    concrete_volume = round(calculate_concrete_and_reinforcement_volume(best)[0], 2)
+    reinforcement_volume = round(calculate_concrete_and_reinforcement_volume(best)[1], 2)
+
+    concrete_embodied_carbon = calculate_embodied_carbon.calculate_embodied_carbon_concrete(concrete_volume)
+    reinforcement_embodied_carbon = calculate_embodied_carbon.calculate_embodied_carbon_reinforcement(reinforcement_volume)      
+
     best_result = {"Generation": generation + 1, 
                    "Best Section Information": best, 
                    "Best fitness": round(best_fitness_ever, 2), 
-                   "Concrete volume": round(calculate_concrete_and_reinforcement_volume(best)[0], 2), 
-                   "Reinforcement volume": round(calculate_concrete_and_reinforcement_volume(best)[1], 2)}
+                   "Concrete volume": concrete_volume, 
+                   "Reinforcement volume": reinforcement_volume,
+                   "Concrete Embodied Carbon": round(concrete_embodied_carbon, 2),
+                   "Reinforcement Embodied Carbon": round(reinforcement_embodied_carbon, 2)}
+    
     
     # Return the best individual found.
-    return best_result
+    print(best_result)
+
+    data = DataGroup(
+        DataItem('Generation', generation+1),
+        DataItem('Core Section', best),
+        DataItem('Fitness', round(best_fitness_ever, 2)),
+        DataItem('Concrete Volume', round(calculate_concrete_and_reinforcement_volume(best)[0], 2), suffix='ft^3'),
+        DataItem('Reinforcement Volume', round(calculate_concrete_and_reinforcement_volume(best)[1], 2), suffix='ft^3'),
+        DataItem('Concrete Embodied Carbon', round(concrete_embodied_carbon, 2), suffix='kgCO2e'),
+        DataItem('Reinforcement Embodied Carbon', round(reinforcement_embodied_carbon, 2), suffix='kgCO2e')
+    )
+    
+    return best_result, data
+        
 
 if __name__ == "__main__":
     test_story_forces = {0: 0, 10: 100, 20: 200, 30: 300, 40: 400}
