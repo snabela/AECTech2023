@@ -14,7 +14,7 @@ from viktor.external.generic import GenericAnalysis
 
 from optimization.run_optimization import run_optimization
 from shapediver.ShapeDiverComputation import ShapeDiverComputation
-from structural import evol_algo
+from structural import evol_algo, calculate_embodied_carbon
 from structural.analysis import base_analysis
 from carbon_and_cost.calculate_carbon_and_cost import calculate_carbon_and_cost
 
@@ -68,6 +68,10 @@ class Parametrization(ViktorParametrization):
     optimization.minimum_wall_length = IntegerField('Minimum Wall Length (ft)', min=10, max=30, default=20)
     optimization.maximum_wall_length = IntegerField('Maximum Wall Length (ft)', min=15, max=40, default=30)
     optimization.button = ActionButton('Perform Preliminary Optimization', method='prelim_optimization')
+
+    #concrete_embodied_carbon = calculate_embodied_carbon.calculate_embodied_carbon_concrete(concrete_volume)
+    #reinforcement_embodied_carbon = calculate_embodied_carbon.calculate_embodied_carbon_reinforcement(reinforcement_volume)
+
     optimization.button2 = ActionButton('Send Optimized Solution to Analysis Model', method='send_to_analysis')
 
     detailedanalysis = Page('Detailed Analysis')
