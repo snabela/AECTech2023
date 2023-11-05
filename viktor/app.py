@@ -3,7 +3,7 @@ from pathlib import Path
 from viktor import ViktorController, File, UserMessage
 from viktor.geometry import GeoPoint
 from viktor.parametrization import ViktorParametrization, Page, GeoPointField, Tab, OptionField, NumberField, BooleanField, IntegerField, ActionButton
-from viktor.views import MapView, MapResult, MapPoint, GeometryView, GeometryResult, WebView, WebResult
+from viktor.views import MapView, MapResult, MapPoint, GeometryView, GeometryResult, WebView, WebResult, DataView, DataResult, DataGroup, DataItem
 from ShapeDiverComputation import ShapeDiverComputation
 from structural import evol_algo
 
@@ -34,6 +34,7 @@ class Parametrization(ViktorParametrization):
     optimization.minimum_wall_length = IntegerField('Minimum Wall Length (ft)', min=10, max=30, default=20)
     optimization.maximum_wall_length = IntegerField('Maximum Wall Length (ft)', min=15, max=40, default=30)
     optimization.button = ActionButton('Perform Preliminary Optimization', method='perform_action')
+
 
     # TODO add necessary input parameters
 
@@ -84,4 +85,3 @@ class Controller(ViktorController):
                                                         parameters.maximum_wall_length)
         print(wall_section)
 
-        return wall_section
