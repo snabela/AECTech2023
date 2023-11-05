@@ -1,3 +1,5 @@
 viktor==14.6.1
 plotly
 pyproj
+requests
+pandas
