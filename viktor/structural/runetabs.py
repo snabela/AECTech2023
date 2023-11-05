@@ -2,10 +2,11 @@ import os
 import sys
 import comtypes.client
 import json
+from scipy.spatial import ConvexHull
+import numpy as np
 
 # Launch ETABS and get SapModel
 def launchETABS(programPath, modelPath, modelName):
-
     ModelPath = modelPath + os.sep + modelName + '.edb'
     helper = comtypes.client.CreateObject('ETABSv1.Helper')
     helper = helper.QueryInterface(comtypes.gen.ETABSv1.cHelper)
@@ -40,6 +41,7 @@ def process_building_structure(file_path):
     # Dictionaries to store the processed information
     nodeInfo = {}
     beamInfo = {}
+    columnInfo = {}
     floorInfo = {}
     levelInfo = {}
 
@@ -57,23 +59,77 @@ def process_building_structure(file_path):
     # Process beams (assuming each entry in beams is a list of node numbers for that beam)
     beam_counter = 1
     for beam_nodes in data['beams']:
-        beamInfo[beam_counter] = [int(node_number) for node_number in beam_nodes]
+        nodes = [int(node_number) + 1 for node_number in beam_nodes]  # Adjust node numbering
+        # Retrieve the z-coordinates for the nodes that make up the beam
+        node_z_coords = [nodeInfo[node][2] for node in nodes]
+        # Beams should have the same z-coordinate
+        if node_z_coords.count(node_z_coords[0]) == len(node_z_coords):
+            beamInfo[beam_counter] = nodes
+        else:
+            print(f"Beam {beam_counter} uses nodes {nodes} at different z levels, which is unusual for a beam.")
         beam_counter += 1
 
-    # Process floors (assuming each entry in floors is a list of node numbers for that floor)
+    # Process columns (assuming each entry in columns is a list of node numbers for that column)
+    column_counter = 1
+    for column_nodes in data['columns']:
+        nodes = [int(node_number) + 1 for node_number in column_nodes]  # Adjust node numbering
+        # Retrieve the z-coordinates for the nodes that make up the column
+        node_z_coords = [nodeInfo[node][2] for node in nodes]
+        # Columns should have different z-coordinates
+        if node_z_coords[0] != node_z_coords[1]:
+            columnInfo[column_counter] = nodes
+        else:
+            print(f"Column {column_counter} uses nodes {nodes} at the same z level, which is unusual for a column.")
+        column_counter += 1
+
+    # # Process floors (assuming each entry in floors is a list of node numbers for that floor)
+    # floor_counter = 1
+    # for floor_nodes in data['floors']:
+    #     nodes = [int(node_number) + 1 for node_number in floor_nodes]  # Adjust node numbering
+    #     # Check if any node's z-coordinate is 0, skip the floor
+    #     if any(nodeInfo[node][2] == 0 for node in nodes):
+    #         continue
+    #     # Check if all z-coordinates are the same for the floor
+    #     if len(set(nodeInfo[node][2] for node in nodes)) != 1:
+    #         print(f"Warning: Floor {floor_counter} has nodes at different z levels.")
+    #     # Check if the number of nodes is less than 3 or more than 4
+    #     if not 3 <= len(nodes) <= 4:
+    #         print(f"Warning: Floor {floor_counter} has an invalid number of nodes: {len(nodes)}.")
+    #     floorInfo[floor_counter] = nodes
+    #     floor_counter += 1
+    
+    # Group nodes by elevation
+    elevation_groups = {}
+    for node_id, (x, y, z) in nodeInfo.items():
+        elevation_groups.setdefault(z, []).append((x, y, node_id))
+
+    # Process each elevation group to find floor plates
     floor_counter = 1
-    for floor_nodes in data['floors']:
-        floorInfo[floor_counter] = [int(node_number) for node_number in floor_nodes]
+    for z, nodes in elevation_groups.items():
+        if z == 0:  # Skip the base level at z=0
+            continue
+        points = np.array([(x, y) for x, y, node_id in nodes])
+        hull = ConvexHull(points)
+        hull_points = hull.vertices
+
+        # Sort hull points in clockwise order
+        center = np.mean(points[hull_points], axis=0)
+        angles = np.arctan2(points[hull_points, 1] - center[1], points[hull_points, 0] - center[0])
+        hull_points = hull_points[np.argsort(-angles)]
+
+        # Map back to node ids
+        ordered_node_ids = [nodes[i][2] for i in hull_points]
+        floorInfo[floor_counter] = ordered_node_ids
         floor_counter += 1
 
     # Infer levels from the unique z values (excluding the base level at z=0)
     z_values = sorted({coord[2] for coord in nodeInfo.values() if coord[2] > 0})
     levelInfo = {f"Level{i+1}": round(z, 3) for i, z in enumerate(z_values)}
 
-    return nodeInfo, beamInfo, floorInfo, levelInfo
+    return nodeInfo, beamInfo, columnInfo, floorInfo, levelInfo
 
 # Create all data in ETABS
-def createDataInETABS(levelInfo, nodeInfo, lineInfo, floorInfo, wallInfo):
+def createDataInETABS(nodeInfo, beamInfo, columnInfo, floorInfo, levelInfo):
     # Create Levels in ETABS
     levelNames = list(levelInfo.keys())
     levelElevations = list(levelInfo.values())
@@ -83,15 +139,28 @@ def createDataInETABS(levelInfo, nodeInfo, lineInfo, floorInfo, wallInfo):
     for nodeName, coords in nodeInfo.items():
         x, y, z = coords
         createNode(SapModel, x, y, z)
+    
+    SapModel.View.RefreshView()
 
-    # Create Lines in ETABS
-    for lineName, nodes in lineInfo.items():
+    # Create beams in ETABS
+    for lineName, nodes in beamInfo.items():
         node1, node2 = nodes
         createLine(SapModel, node1, node2)
+    
+    SapModel.View.RefreshView()
+    
+    # Create columns in ETABS
+    for lineName, nodes in columnInfo.items():
+        node1, node2 = nodes
+        createLine(SapModel, node1, node2)
+    
+    SapModel.View.RefreshView()
 
     # Create Areas (Floors) in ETABS
     for floorName, nodesList in floorInfo.items():
         createArea(SapModel, nodesList)
+    
+    SapModel.View.RefreshView()
 
 # Create Levels in ETABS
 def createLevels(SapModel,levelNames,levelElevations):
@@ -111,13 +180,15 @@ def createNode(SapModel,x,y,z):
 # Create Line (Column/Beam) in ETABS
 def createLine(SapModel,node1,node2):
     Name = ""
-    ret = SapModel.FrameObj.AddByPoint(node1, node2, Name)
+    ret = SapModel.FrameObj.AddByPoint(str(node1), str(node2), Name)
 
-# Create area  in ETABS
-def createArea(SapModel,nodesList):
-    ret = SapModel.AreaObj.AddByPoint(4, nodesList, '')
+# Create area in ETABS
+def createArea(SapModel, nodesList):
+    # Convert each integer node number in nodesList to a string
+    nodesListAsString = [str(node) for node in nodesList]
+    ret = SapModel.AreaObj.AddByPoint(len(nodesList), nodesListAsString, '')
 
-# 
+# Spit out data for Viktor
 def createResultsFileforViktor(SapModel):
     print("hello")
 
@@ -127,13 +198,13 @@ programPath = 'D:\Computers and Structures\ETABS 21\ETABS.exe'
 # Location and name of data from Victor
 dataFileFromVictor = 'D:\\Repo\\AECTech2023\\viktor\\structural\\building_structure.json'
 
+# Read data from Victor
+nodeInfo, beamInfo, columnInfo, floorInfo, levelInfo = process_building_structure(dataFileFromVictor)
+
 # Launch ETABS
 SapModel = launchETABS(programPath, 'D:\\Repo\\AECTech2023\\viktor\\structural\\analysismodel', 'Template')
 
-# Read data from Victor
-# levelInfo, nodeInfo, lineInfo, floorInfo, wallInfo = process_building_structure(dataFileFromVictor)
-
-# createDataInETABS(levelInfo, nodeInfo, lineInfo, floorInfo, wallInfo)
+createDataInETABS(nodeInfo, beamInfo, columnInfo, floorInfo, levelInfo)
 
 # TO DO:
 # Applying Supports
