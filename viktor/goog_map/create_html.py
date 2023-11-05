@@ -17,7 +17,7 @@ def create_html(lon, lat, secret):
     html_text = """<!DOCTYPE html>
     <head>
       <meta charset="utf-8">
-      <title>CesiumJS 3D Tiles Simple Demo</title>
+      <title>3D Tiles Using CesiumJS</title>
       <script src="https://ajax.googleapis.com/ajax/libs/cesiumjs/1.105/Build/Cesium/Cesium.js"></script>
       <link href="https://ajax.googleapis.com/ajax/libs/cesiumjs/1.105/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
     </head>
@@ -55,7 +55,7 @@ def create_html(lon, lat, secret):
           """ + str(lon) + "," + str(lat) + "," + str(get_elevation(lat, lon) + 250) + """),
           orientation: {
             heading: Cesium.Math.toRadians(45),
-            pitch: 0,
+            pitch: Cesium.Math.toRadians(-20),
             roll: 0
           }
         });

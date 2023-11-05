@@ -46,7 +46,7 @@ class Controller(ViktorController):
             "/CesiumMilkTruck.glb")
         return GeometryResult(geometry)
 
-    @WebView('3D Map page-Wen', duration_guess=1)
+    @WebView('3D Tiles Map', duration_guess=1)
     def get_web_view(self, params, **kwargs):
         secret = os.getenv("API_KEY")
         lat = params.location.center.lat
