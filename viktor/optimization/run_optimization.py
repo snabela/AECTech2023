@@ -56,7 +56,10 @@ def run_optimization(params, dimensions):
 
                     cost, carbon = recalculate_cost_and_carbon(params, base_radius, peak_radius, no_floors, floor_to_floor)
 
-                    progress_message(message=f'Iteration {i}/{n}', percentage=(i / n) * 100)
+                    message = f"Iteration {i}/{n}. \n " \
+                              f"Base radius: {base_radius} \n " \
+
+                    progress_message(message=message, percentage=(i / n) * 100)
 
                     list_cost.append(cost)
                     list_embodied_carbon.append(carbon)

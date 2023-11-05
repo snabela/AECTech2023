@@ -172,7 +172,7 @@ class Controller(ViktorController):
         building_structure = json.loads(Storage().get('BUILDING_STRUCTURE', scope='entity').getvalue())
         building_floor_elv_area = json.loads(Storage().get('BUILDING_FLOOR_ELV_AREA', scope='entity').getvalue())
 
-        fig, data = calculate_carbon_and_cost(params, building_structure, building_floor_elv_area)
+        fig, data, total_cost, total_carbon = calculate_carbon_and_cost(params, building_structure, building_floor_elv_area)
         return PlotlyAndDataResult(fig.to_json(), data)
 
     def run_etabs(self, params, **kwargs):
