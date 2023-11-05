@@ -183,7 +183,7 @@ def get_seismic_force(story_data, SD, LL, R, latitude, longitude, code, riskCate
     
     story_seismic_loads_dict = {}
     for i in range(len(story_seismic_loads)):
-        story_seismic_loads_dict[f"Story {i+1}"] = story_seismic_loads[i]
+        story_seismic_loads_dict[story_elevations[i]] = story_seismic_loads[i]
     
     return story_seismic_loads_dict, seimsic_shear_story_plot, seismic_shear_elevation_plot, seismic_data
 
