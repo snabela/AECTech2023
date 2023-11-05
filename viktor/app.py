@@ -4,16 +4,7 @@ from viktor import ViktorController, File, UserMessage
 from viktor.geometry import GeoPoint
 from viktor.parametrization import ViktorParametrization, Page, GeoPointField, Tab, OptionField, NumberField, BooleanField
 from viktor.views import MapView, MapResult, MapPoint, GeometryView, GeometryResult, WebView, WebResult
-from ShapeDiverTinySdkViktorUtils import ShapeDiverTinySessionSdkMemoized
-import os
-
-# ShapeDiver ticket and modelViewUrl
-ticket = os.getenv("SD_TICKET")
-if ticket is None or len(ticket) == 0:
-    ticket = "a2dea6109cbcbe3b34906036c1c6bce1763adac8b1e25066af1ab69f5d715bfca562e9559d9f8e28f78756a545e3db3e1e29ea646423be87583ba0cd159b4806f8c26b48d12943be774af5cfd3d1eb5da4dbd19f163e7562cc17d823dcac2375e1446124ba732a36ca93094a1cacd4254ca2adfa222d5418-1c02a1b80a0b39bc36f136303faee4f2"
-modelViewUrl = os.getenv("SD_MODEL_VIEW_URL")
-if modelViewUrl is None or len(modelViewUrl) == 0:
-    modelViewUrl = "https://nsc005.us-east-1.shapediver.com"
+from ShapeDiverComputation import ShapeDiverComputation
 
 class Parametrization(ViktorParametrization):
     location = Page('Location', views='get_map_view')
@@ -63,19 +54,8 @@ class Controller(ViktorController):
         # Get parameter values from section "ShapeDiverParams"
         parameters = params.ShapeDiverParams
 
-        # Initialize a session with the model (memoized)
-        shapeDiverSessionSdk = ShapeDiverTinySessionSdkMemoized(ticket, modelViewUrl)
-
-        # compute outputs of ShapeDiver model, get resulting glTF 2 assets
-        contentItemsGltf2 = shapeDiverSessionSdk.output(paramDict = parameters).outputContentItemsGltf2()
-        
-        if len(contentItemsGltf2) < 1:
-            raise UserError('Computation did not result in at least one glTF 2.0 asset.')
-        
-        if len(contentItemsGltf2) > 1: 
-            UserMessage.warning(f'Computation resulted in {contentItemsGltf2.count} glTF 2.0 assets, only displaying the first one.')
-
-        glTF_file = File.from_url(contentItemsGltf2[0]['href'])
+        # run ShapeDiver computation
+        glTF_file = ShapeDiverComputation(parameters)
 
         return GeometryResult(geometry=glTF_file)
 

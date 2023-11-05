@@ -158,21 +158,24 @@ class ShapeDiverResponse:
 
         return [item for item in self.outputContentItems() if item['contentType'] == 'model/gltf-binary']
 
-    def exports(self):
+    def exports(self, *, exportName = None):
         """Export definitions and results
 
         Look for ResponseExport in the API documentation.
         """
 
-        return [value for (key, value) in self.response['exports'].items()]
+        if exportName is not None:
+            return [value for (key, value) in self.response['exports'].items() if value['name'] == exportName]
+        else:
+            return [value for (key, value) in self.response['exports'].items()]
     
-    def exportContentItems(self):
+    def exportContentItems(self, *, exportName = None):
         """Content resulting from exports
 
         Look for ResponseExportContent in the API documentation.
         """
 
-        return flatten_nested_list([exports['content'] for exports in self.exports()])
+        return flatten_nested_list([exports['content'] for exports in self.exports(exportName = exportName)])
     
     def sessionId(self):
         """Id of the session"""
@@ -290,16 +293,18 @@ class ShapeDiverTinySessionSdk:
 
     @ExceptionHandler
     @ParameterMapper
-    def export(self, *, exportIds, paramDict = {}, includeOutputs = False):
+    def export(self, *, paramDict = {}, includeOutputs = False):
         """Request an export
 
         API documentation: https://sdr7euc1.eu-central-1.shapediver.com/api/v2/docs/#/export/put_api_v2_session__sessionId__export
         """
 
         endpoint = f'{self.modelViewUrl}/api/v2/session/{self.response.sessionId()}/export'
-        body = {'exports': exportIds, 'parameters': paramDict}
+        body = {'parameters': paramDict}
+        body['exports'] = [export['id'] for export in self.response.exports()]
         if includeOutputs:
-            body['outputs'] = (output['id'] for output in self.response.outputs())
+            body['outputs'] = [output['id'] for output in self.response.outputs()]
+        print(str(body))
         jsonBody = json.dumps(body)
         headers = {
             'Content-Type': 'application/json'
