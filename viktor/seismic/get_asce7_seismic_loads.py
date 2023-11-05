@@ -186,8 +186,18 @@ def get_seismic_force(story_data, SD, LL, R, latitude, longitude, code, riskCate
     story_seismic_loads_dict = {}
     for i in range(len(story_seismic_loads)):
         story_seismic_loads_dict[story_elevations[i]] = story_seismic_loads[i]
-    
-    return story_seismic_loads_dict, seimsic_shear_story_plot, seismic_shear_elevation_plot, seismic_data
+
+    story_seismic_loads_sorted = sorted(story_seismic_loads_dict.items(), key=lambda item: item[1])
+    sorted_dict = {k: v for k, v in story_seismic_loads_sorted}
+    last_item = list(sorted_dict.items())[-1]
+    base_shear = round(last_item[1],2)
+
+    # overturning = 0
+    # for i in range(len(sorted_dict)):
+    #     if i==0:
+    #         overturning = sorted_dict
+
+    return story_seismic_loads_dict, seimsic_shear_story_plot, seismic_shear_elevation_plot, seismic_data,base_shear
 
 if __name__ == '__main__':
     story_elevations = [48, 36, 24, 12] #ft

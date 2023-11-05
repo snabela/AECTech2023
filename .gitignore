@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# analysis model rubish files
+viktor/structural/analysismodel
+
 # Distribution / packaging
 .Python
 build/

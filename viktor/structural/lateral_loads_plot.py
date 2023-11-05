@@ -20,8 +20,8 @@ def plot_lateral_loads(seismic_shear_story_plot, seismic_shear_elevation_plot, w
     fig = go.Figure(data=data, layout=layout)
 
     # show figure
-    fig.show()
-
+    # fig.show()
+    return fig
 if __name__ == '__main__':
         
     seimsic_shear_story_plot = [312133.33,312133.33,54733.33,54733.33,0]

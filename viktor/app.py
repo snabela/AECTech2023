@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 import plotly.express as px
 
@@ -10,6 +9,7 @@ from viktor.parametrization import ViktorParametrization, Page, GeoPointField, O
 from viktor.result import DownloadResult
 from viktor.views import MapView, MapResult, MapPoint, GeometryView, GeometryResult, WebView, WebResult, \
     PlotlyAndDataResult, PlotlyAndDataView, PlotlyView, PlotlyResult
+from viktor.external.generic import GenericAnalysis
 
 from optimization.run_optimization import run_optimization
 from shapediver.ShapeDiverComputation import ShapeDiverComputation
@@ -68,6 +68,9 @@ class Parametrization(ViktorParametrization):
     optimization.maximum_wall_length = IntegerField('Maximum Wall Length (ft)', min=15, max=40, default=30)
     optimization.button = ActionButton('Perform Preliminary Optimization', method='prelim_optimization')
     optimization.button2 = ActionButton('Send Optimized Solution to Analysis Model', method='send_to_analysis')
+
+    detailedanalysis = Page('Detailed Analysis')
+    detailedanalysis.button = ActionButton('Run etabs', method='run_etabs')
 
     carbon_and_cost = Page('Carbon & Cost', views='get_carbon_and_cost')
     carbon_and_cost.carbon_per_floor_area = NumberField('Carbon per Floor Area', suffix='CO2/m2', flex=50)
@@ -170,3 +173,17 @@ class Controller(ViktorController):
 
         fig, data = calculate_carbon_and_cost(params, building_structure, building_floor_elv_area)
         return PlotlyAndDataResult(fig.to_json(), data)
+
+    def run_etabs(self, params, **kwargs):
+        file_path = Path(__file__).parent / 'structural' / 'testData.txt'
+
+        files = [('testData.txt', File.from_path(file_path))]
+
+        # Run the analysis and obtain the output file
+        generic_analysis = GenericAnalysis(files=files, executable_key="run_etabs", output_filenames=["output.json"])
+        generic_analysis.execute(timeout=120)
+        output_file = generic_analysis.get_output_file("output.json")
+        print(output_file)
+
+        # Setting data on a key
+        Storage().set('results_etabs', data=File.from_data(output_file), scope='entity')

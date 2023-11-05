@@ -1,11 +1,11 @@
 import plotly.graph_objects as go
-
+import json
 from viktor.core import Storage
 from viktor.views import DataGroup, DataItem
 
 from seismic import get_asce7_seismic_loads as seismic
 from wind import get_asce7_wind_loads as wind
-
+from structural import lateral_loads_plot
 
 def base_analysis(params):
     lat = params.location.center.lat
@@ -22,10 +22,36 @@ def base_analysis(params):
     # with open(params.structural.file_seismic,'r') as file:
     #     for line in file:
     #         print(line.strip())
+    sds = -1
+    base_shear = -1
+    seismic_shear_story_plot = None
+    seismic_shear_elevation_plot = None
+    wind_shear_story_plot = None
+    wind_shear_elevation_plot = None
+
     if params.structural.file_seismic:
+        # data structure: area_height = [[F,1000,40],[F,1200,10]]
         area_height = []
-        # line in params.structural.file_seismic.file.open():
+        for line in params.structural.file_seismic.file.open():
+            line = line.strip()
+            area_height_data = line.split(',')
+            if len(area_height_data) > 1:
+                area_height.append([int(area_height_data[2]), int(area_height_data[1])])
+
+        if params.structural.tdl and params.structural.tll and params.structural.r_value:
+            print(area_height)
+            story_seismic_loads_dict, seismic_shear_story_plot, seismic_shear_elevation_plot, seismic_data,base_shear = seismic.get_seismic_force(
+                area_height, tdl, tll, r, lat, lon, code, risk_cat, site_class)
+            sds = seismic_data['sds']
+            # sd1 = seismic_data['sd1']
+    else:
+        area_height = []
+        # datastructure [{}]
+        file_content = Storage().get('BUILDING_STRUCTURE', scope='entity')
+        building_structure = json.loads(file_content.getvalue())
+        print(building_structure)
         for line in Storage().get('BUILDING_FLOOR_ELV_AREA', scope='entity').open():
+            print()
             line = line.strip()
             area_height_data = line.split(',')
             if len(area_height_data) > 1:
@@ -38,10 +64,6 @@ def base_analysis(params):
             sds = seismic_data['sds']
             sd1 = seismic_data['sd1']
             base_shear = seismic_data['base_shear']
-        else:
-            sds = 0
-    else:
-        sds = 0
 
     if params.structural.file_wind:
         floors = wind.get_building_data(params.structural.file_wind)
@@ -50,6 +72,10 @@ def base_analysis(params):
         wind_story_shear_plot_x = wind.get_story_shear_plot(story_forces_x)
         wind_story_shear_plot_y = wind.get_story_shear_plot(story_forces_y)
         # Use the same elevation plots from seismic
+    else:
+        wind_speed = -1
+        base_x = -1
+        base_y = -1
 
     data = DataGroup(
         group_a=DataItem('Location', 'Coordinate', subgroup=DataGroup(
@@ -65,12 +91,14 @@ def base_analysis(params):
         )),
         group_c=DataItem('Seismic', 'Demands', subgroup=DataGroup(
             value_a=DataItem('Sds', sds, suffix='g'),
-            value_b=DataItem('Base Shear', base_shear / 1000, suffix='kip'),
+            value_b=DataItem('Base Shear', base_shear, suffix='kip'),
             value_c=DataItem('Overturning Moment', 5000, suffix='kip-ft'),
             value_d=DataItem('Max Displacement', 5, suffix='in')
         )))
-    fig = go.Figure(
-        data=[go.Bar(x=[1, 2, 3], y=[1, 3, 2])],
-        layout=go.Layout(title=go.layout.Title(text="A Figure Specified By A Graph Object"))
-    )
+    # fig = go.Figure(
+    #     data=[go.Bar(x=[1, 2, 3], y=[1, 3, 2])],
+    #     layout=go.Layout(title=go.layout.Title(text="A Figure Specified By A Graph Object"))
+    # )
+    fig = lateral_loads_plot.plot_lateral_loads(seismic_shear_story_plot,seismic_shear_elevation_plot,wind_shear_story_plot,wind_shear_elevation_plot)
+
     return fig, data
