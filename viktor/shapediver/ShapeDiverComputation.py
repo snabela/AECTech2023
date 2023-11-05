@@ -7,7 +7,7 @@ from shapediver.ShapeDiverTinySdkViktorUtils import ShapeDiverTinySessionSdkMemo
 
 ticket = os.getenv("SD_TICKET")
 if ticket is None or len(ticket) == 0:
-    ticket = "567ca9d3794efdaf984a64f8410656443d7bfbfb8dd358a00c392d78b62bc0f32b22f6a2d9a9cf5ec92ba4de82ca5a60f91b2339100f9136e43509a4b34276fac32da1f35227c2167685b3436de987579f76b7e8fa62417a450d51233e390ed954969a99c95f342aeff027c72364700afe02500b99d00026-0cfb869c3094ede7c31fa4c242b5278a"
+    ticket = "b226b6ce238e16f8a08f6aa9c5e714ca5c002b414e04b4ae196e63385d212915c7f578379b02e048c5966c7442a3129e528116ae45b8bf513c7bf4892116770c76380a0c90135065ef5c87a5f1ca2a770198510198042486ad26e5cbc7a5af9a07fe552df74dd1e1a798f97b95eef832952c30b3b5a62e23-362022f1a76d8c3ea7d7496cbe8d8a16"
 modelViewUrl = os.getenv("SD_MODEL_VIEW_URL")
 if modelViewUrl is None or len(modelViewUrl) == 0:
     modelViewUrl = "https://nsc005.us-east-1.shapediver.com"
