@@ -9,6 +9,7 @@ from viktor.parametrization import ViktorParametrization, Page, GeoPointField, O
 from viktor.result import DownloadResult
 from viktor.views import MapView, MapResult, MapPoint, GeometryView, GeometryResult, WebView, WebResult, \
     PlotlyAndDataResult, PlotlyAndDataView, PlotlyView, PlotlyResult
+from viktor.external.generic import GenericAnalysis
 
 from optimization.run_optimization import run_optimization
 from shapediver.ShapeDiverComputation import ShapeDiverComputation
@@ -68,6 +69,7 @@ class Parametrization(ViktorParametrization):
     optimization.button2 = ActionButton('Send Optimized Solution to Analysis Model', method='send_to_analysis')
 
     detailedanalysis = Page('Detailed Analysis')
+    detailedanalysis.button = ActionButton('Run etabs', method='run_etabs')
 
     global_optimization = Page('Global Optimization', views='get_optimization')
     global_optimization.min_base_radius = NumberField('Min Base Radius', default=60)
@@ -155,3 +157,17 @@ class Controller(ViktorController):
                                       color_continuous_scale=px.colors.diverging.Tealrose,
                                       color_continuous_midpoint=2)
         return PlotlyResult(fig.to_json())
+    
+    def run_etabs(self, params, **kwargs):
+        file_path = Path(__file__).parent / 'structural' / 'testData.txt'
+
+        files = [('testData.txt', File.from_path(file_path))]
+
+        # Run the analysis and obtain the output file
+        generic_analysis = GenericAnalysis(files=files, executable_key="run_etabs", output_filenames=["output.json"])
+        generic_analysis.execute(timeout=120)
+        output_file = generic_analysis.get_output_file("output.json")
+        print(output_file)
+
+        # Setting data on a key
+        Storage().set('results_etabs', data=File.from_data(output_file), scope='entity')
