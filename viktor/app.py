@@ -1,4 +1,5 @@
 from pathlib import Path
+import plotly.express as px
 
 from viktor import ViktorController
 from viktor.core import Storage
@@ -7,8 +8,9 @@ from viktor.parametrization import ViktorParametrization, Page, GeoPointField, O
     IntegerField, ActionButton, LineBreak, FileField, DownloadButton
 from viktor.result import DownloadResult
 from viktor.views import MapView, MapResult, MapPoint, GeometryView, GeometryResult, WebView, WebResult, \
-    PlotlyAndDataResult, PlotlyAndDataView
+    PlotlyAndDataResult, PlotlyAndDataView, PlotlyView, PlotlyResult
 
+from optimization.run_optimization import run_optimization
 from shapediver.ShapeDiverComputation import ShapeDiverComputation
 from structural import evol_algo
 from structural.analysis import base_analysis
@@ -56,7 +58,7 @@ class Parametrization(ViktorParametrization):
     structural.line_break4 = LineBreak()
     structural.file_wind = FileField('Wind load input', file_types=['.png', '.jpg', '.jpeg','.txt','.json'], max_size=5_000_000)
 
-    optimization = Page('Optimization')
+    optimization = Page('Profile Optimization')
     optimization.story_forces = IntegerField('Story Forces', min=0, default=100)
     optimization.minimum_wall_thickness = IntegerField('Minimum Wall Thickness (ft)', min=1, max=3, default=1)
     optimization.maximum_wall_thickness = IntegerField('Maximum Wall Thickness (ft)', min=1, max=3, default=2)
@@ -64,6 +66,20 @@ class Parametrization(ViktorParametrization):
     optimization.maximum_wall_length = IntegerField('Maximum Wall Length (ft)', min=15, max=40, default=30)
     optimization.button = ActionButton('Perform Preliminary Optimization', method='prelim_optimization')
     optimization.button2 = ActionButton('Send Optimized Solution to Analysis Model', method='send_to_analysis')
+
+    global_optimization = Page('Global Optimization', views='get_optimization')
+    global_optimization.min_base_radius = NumberField('Min Base Radius', default=60)
+    global_optimization.max_base_radius = NumberField('Max Base Radius', default=200)
+    global_optimization.step_base_radius = NumberField('Step Base Radius', default=10)
+    global_optimization.min_peak_radius = NumberField('Min Peak Radius', default=60)
+    global_optimization.max_peak_radius = NumberField('Max Peak Radius', default=100)
+    global_optimization.step_peak_radius = NumberField('Step Peak Radius', default=10)
+    global_optimization.min_no_floors = NumberField('Min No Floors', default=10)
+    global_optimization.max_no_floors = NumberField('Max No Floors', default=50)
+    global_optimization.step_no_floors = NumberField('Step No Floors', default=5)
+    global_optimization.min_floor_to_floor = NumberField('Min Floor to Floor', default=8)
+    global_optimization.max_floor_to_floor = NumberField('Max Floor to Floor', default=15)
+    global_optimization.step_floor_to_floor = NumberField('Step Floor to Floor', default=1)
 
 
 class Controller(ViktorController):
@@ -127,3 +143,13 @@ class Controller(ViktorController):
     def download_building_floor_elv_area():
         file_content = Storage().get('BUILDING_FLOOR_ELV_AREA', scope='entity')
         return DownloadResult(file_content=file_content, file_name='building_floor_elv_area.json')
+
+    @PlotlyView("Result", duration_guess=1)
+    def get_optimization(self, params, **kwargs):
+        dimensions = ['Base Radius', 'Peak Radius', 'No Floors', 'Floor to Floor', 'Cost', 'Embodied Carbon']
+        df = run_optimization(params, dimensions)
+        fig = px.parallel_coordinates(df, color="Embodied Carbon",
+                                      dimensions=dimensions,
+                                      color_continuous_scale=px.colors.diverging.Tealrose,
+                                      color_continuous_midpoint=2)
+        return PlotlyResult(fig.to_json())
