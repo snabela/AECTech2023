@@ -1,8 +1,10 @@
 from viktor.utils import memoize
 from viktor import UserError, UserMessage
-from ShapeDiverTinySdk import ShapeDiverTinySessionSdk, RgbToShapeDiverColor, mapFileEndingToContentType
 import json
 import requests
+
+from shapediver.ShapeDiverTinySdk import ShapeDiverTinySessionSdk, RgbToShapeDiverColor, mapFileEndingToContentType
+
 
 def exceptionHandler(e):
     """VIKTOR-specific exception handler to use for ShapeDiverTinySessionSdk

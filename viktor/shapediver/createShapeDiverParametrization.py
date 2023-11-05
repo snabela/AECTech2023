@@ -2,6 +2,7 @@ import json
 import os
 from ShapeDiverTinySdk import ShapeDiverTinySessionSdk, ShapeDiverColorToRgb, mapContentTypeToFileEnding
 
+
 def createParametrization(ticket, modelViewUrl):
 
     sdk = ShapeDiverTinySessionSdk(ticket = ticket, modelViewUrl = modelViewUrl)
