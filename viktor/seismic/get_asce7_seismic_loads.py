@@ -175,7 +175,9 @@ def get_seismic_force(story_data, SD, LL, R, latitude, longitude, code, riskCate
         if i < (len(story_elevations) - 1):
             seimsic_shear_story_plot.append(shear_story[i] )
             seismic_shear_elevation_plot.append(story_elevations[i+1])
+    # getting base shear
 
+    seismic_base_shear = base_shear
 
     # Plot the data
     # fig = go.Figure()
@@ -186,18 +188,8 @@ def get_seismic_force(story_data, SD, LL, R, latitude, longitude, code, riskCate
     story_seismic_loads_dict = {}
     for i in range(len(story_seismic_loads)):
         story_seismic_loads_dict[story_elevations[i]] = story_seismic_loads[i]
-
-    story_seismic_loads_sorted = sorted(story_seismic_loads_dict.items(), key=lambda item: item[1])
-    sorted_dict = {k: v for k, v in story_seismic_loads_sorted}
-    last_item = list(sorted_dict.items())[-1]
-    base_shear = round(last_item[1],2)
-
-    # overturning = 0
-    # for i in range(len(sorted_dict)):
-    #     if i==0:
-    #         overturning = sorted_dict
-
-    return story_seismic_loads_dict, seimsic_shear_story_plot, seismic_shear_elevation_plot, seismic_data,base_shear
+    
+    return story_seismic_loads_dict, seimsic_shear_story_plot, seismic_shear_elevation_plot, seismic_data, seismic_base_shear
 
 if __name__ == '__main__':
     story_elevations = [48, 36, 24, 12] #ft
