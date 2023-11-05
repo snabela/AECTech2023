@@ -16,6 +16,8 @@ def fetch_usgs_data(latitude, longitude, code,riskCategory, siteClass):
         print('Invalid code')
         return
 
+    print(url)
+
     response = requests.get(url)
     if response.status_code == 200:
         data = response.json()
