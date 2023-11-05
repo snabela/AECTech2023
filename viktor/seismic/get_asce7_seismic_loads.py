@@ -101,6 +101,8 @@ def get_seismic_force(story_data, SD, LL, R, latitude, longitude, code, riskCate
     seismic_shear_elevation_plot: list of shear elevation values for plotting
     seismic_data: dictionary of seismic parameters from USGS (sds, sd1, ss, s1, short_period, long_period)
     '''
+    # Initialize lists to store story elevation and floor area data
+
     story_elevations = []
     story_floor_area = []
 
@@ -109,6 +111,28 @@ def get_seismic_force(story_data, SD, LL, R, latitude, longitude, code, riskCate
         story_floor_area.append(story[1])
 
     total_height = story_elevations[0] - story_elevations[-1]
+
+    # If needed the data can be obtained from a json file that is later converted into a dataframe as followes:
+
+
+    # # Load the JSON file
+    # with open('filename.json', 'r') as f:
+    #     data = json.load(f)
+
+    # # Convert the data into a pandas DataFrame
+    # df = pd.DataFrame(data)
+
+    # # Select only the 'area' and 'elev' columns
+    # df = df[['area', 'elev']]
+
+    # # Reverse the order of the DataFrame to go from top floor to bottom
+    # df = df.iloc[::-1].reset_index(drop=True)
+
+    # Drop the last row
+    # df = df.drop(df.index[-1])
+
+    # Calculate T
+
     T = 0.016*(total_height**0.7)
 
     multiperiod_design_spectrum_df, multiperiod_mce_spectrum_df, two_period_design_spectrum_df, two_period_mce_spectrum_df, seismic_data = fetch_usgs_data(latitude, longitude, code, riskCategory,siteClass)
