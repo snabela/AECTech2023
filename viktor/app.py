@@ -2,7 +2,7 @@ from pathlib import Path
 
 from viktor import ViktorController, File, UserMessage
 from viktor.geometry import GeoPoint
-from viktor.parametrization import ViktorParametrization, Page, GeoPointField, Tab, OptionField, NumberField, BooleanField
+from viktor.parametrization import ViktorParametrization, Page, GeoPointField, Tab, OptionField, NumberField, BooleanField, IntegerField
 from viktor.views import MapView, MapResult, MapPoint, GeometryView, GeometryResult, WebView, WebResult
 from ShapeDiverComputation import ShapeDiverComputation
 
@@ -27,6 +27,10 @@ class Parametrization(ViktorParametrization):
     structural.wind.code = OptionField('Code', options=['ASCE41', 'ACI'])
 
     optimization = Page('Optimization')
+    optimization.story_forces = IntegerField('Story Forces', min=0)
+    optimization.minimum_wall_thickness = IntegerField('Minimum Wall Thickness (ft)', min=1)
+    optimization.maximum_wall_thickness = IntegerField('Maximum Wall Thickness (ft)', min=1)
+
     # TODO add necessary input parameters
 
 
