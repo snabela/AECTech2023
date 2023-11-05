@@ -1,4 +1,4 @@
-def evolutionary_optimizer(story_force_dictionary):
+def evolutionary_optimizer(story_force_dictionary, min_wall_length, max_wall_length):
     '''
     Input: story_force_dictionary - dictionary of story forces, with keys as story elevations and values as story forces
     Output: optimized_section_dictionary - dictionary of core section, with keys as story elevations and values as core dimensions [length, thickness, reinforcement_ratio]
@@ -12,8 +12,8 @@ def evolutionary_optimizer(story_force_dictionary):
     MUTATION_RATE = 0.05 # Probability of mutation
     CROSSOVER_RATE = 0.9 # Probability of crossover
     GENERATIONS = 100 # Number of generations to run the algorithm
-    LENGTH_MIN = 20  # Core Length min ft
-    LENGTH_MAX = 40  # Core Length max ft
+    LENGTH_MIN = min_wall_length  # Core Length min ft
+    LENGTH_MAX = max_wall_length  # Core Length max ft
     THICKNESS_MIN = 1  # Core thickness min ft
     THICKNESS_MAX = 3  # Core thickness max ft
     REINFORCEMENT_RATIO_MIN = 0.0025 # Reinforcement ratio min
@@ -140,4 +140,4 @@ def evolutionary_optimizer(story_force_dictionary):
 
 if __name__ == "__main__":
     test_story_forces = {0: 0, 10: 100, 20: 200, 30: 300, 40: 400}
-    print(evolutionary_optimizer(test_story_forces))
+    print(evolutionary_optimizer(test_story_forces, 20, 40))
