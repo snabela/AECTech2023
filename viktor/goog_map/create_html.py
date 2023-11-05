@@ -66,7 +66,7 @@ def create_html(lon, lat, secret):
           """ + str(lon) + "," + str(lat) + "," + str(get_elevation(lat, lon) + 50) + """),
           orientation: {
             heading: Cesium.Math.toRadians(45),
-            pitch: Cesium.Math.toRadians(45),
+            pitch: Cesium.Math.toRadians(-20),
             roll: 0
           }
         });
