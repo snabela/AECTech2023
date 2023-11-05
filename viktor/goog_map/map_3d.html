@@ -28,7 +28,7 @@
 
     // Add 3D Tiles tileset
 	const tileset = new Cesium.Cesium3DTileset({
-      url: "https://tile.googleapis.com/v1/3dtiles/root.json?key=AIzaSyC5aJ5Z0Popy3TXC9qJBp2Au6jNVCcRAiA"
+      url: "https://tile.googleapis.com/v1/3dtiles/root.json?key=secret"
     });
 
     viewer.scene.primitives.add(tileset);
@@ -45,4 +45,9 @@
     });
 	
   </script>
+
+  <?php
+    import requests, os
+    $secret = os.getenv("API_KEY")
+  ?>
 </body>

@@ -4,7 +4,8 @@ from viktor import ViktorController, File
 from viktor.geometry import GeoPoint
 from viktor.parametrization import ViktorParametrization, Page, GeoPointField, Tab, OptionField
 from viktor.views import MapView, MapResult, MapPoint, GeometryView, GeometryResult, WebView, WebResult
-from goog_map import create_html
+#from goog_map import create_html
+#import requests, os
 
 
 class Parametrization(ViktorParametrization):
@@ -47,6 +48,7 @@ class Controller(ViktorController):
 
     @WebView('3D Map page-Wen', duration_guess=1)
     def get_web_view(self, params, **kwargs):
+        """
         # if you want to use a dynamic html file with variable lon and lat
         lat = params.location.center.lat
         lon = params.location.center.lon
@@ -55,7 +57,8 @@ class Controller(ViktorController):
         # generate html content and create the WebResult
         html_content = create_html.create_html(lon, lat)
         return WebResult(html=html_content)
+        """
 
         # if you want to use a static html file with hardcoded lon and lat
-        # html_path = Path(__file__).parent / 'goog_map/map_3d.html'
-        # return WebResult.from_path(html_path)
+        html_path = Path(__file__).parent / 'goog_map/map_3d.html'
+        return WebResult.from_path(html_path)

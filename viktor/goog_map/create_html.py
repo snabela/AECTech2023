@@ -1,11 +1,13 @@
-import requests
+import requests, os
+
+secret = os.getenv("API_KEY")
+
 
 def create_html(lon, lat):
-
     # Get elevation of chosen point using Goog Elevation API
     def get_elevation(lat, lon):
         response = requests.get(
-            f'https://maps.googleapis.com/maps/api/elevation/json?locations={lat},{lon}&key=AIzaSyC5aJ5Z0Popy3TXC9qJBp2Au6jNVCcRAiA'
+            f'https://maps.googleapis.com/maps/api/elevation/json?locations={lat},{lon}&key={secret}'
         )
         data = response.json()
 
@@ -44,7 +46,7 @@ def create_html(lon, lat):
     
         // Add 3D Tiles tileset
         const tileset = new Cesium.Cesium3DTileset({
-          url: "https://tile.googleapis.com/v1/3dtiles/root.json?key=AIzaSyC5aJ5Z0Popy3TXC9qJBp2Au6jNVCcRAiA"
+          url: "https://tile.googleapis.com/v1/3dtiles/root.json?key=""" + str(secret) + """"
         });
     
         viewer.scene.primitives.add(tileset);
