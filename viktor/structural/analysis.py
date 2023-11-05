@@ -4,6 +4,7 @@ from viktor.core import Storage
 from viktor.views import DataGroup, DataItem
 
 from seismic import get_asce7_seismic_loads as seismic
+from wind import get_asce7_wind_loads as wind
 
 
 def base_analysis(params):
