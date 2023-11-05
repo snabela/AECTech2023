@@ -4,7 +4,7 @@ def evolutionary_optimizer(story_force_dictionary, min_wall_thickness, max_wall_
     Output: optimized_section_dictionary - dictionary of core section, with keys as story elevations and values as core dimensions [length, thickness, reinforcement_ratio]
     '''
 
-    import mdof_simple_model as mdof
+    from structural import mdof_simple_model as mdof
     import random
 
     # Constants

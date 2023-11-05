@@ -74,7 +74,14 @@ class Controller(ViktorController):
     
     def perform_action(self, params, **kwargs):
         ## TODO remove test_story_forces
-        test_story_forces = {0: 0, 10: params.story_forces, 20: params.story_forces, 30: params.story_forces, 40: params.story_forces}
+        parameters = params.optimization
 
-        evol_algo.evolutionary_optimizer(test_story_forces, params.minimum_wall_thickness, params.maximum_wall_thickness, params.minimum_wall_length, params.maximum_wall_length)
-        return UserMessage.info('Optimization completed')
+        test_story_forces = {0: 0, 10: parameters.story_forces, 20: parameters.story_forces, 30: parameters.story_forces, 40: parameters.story_forces}
+        wall_section = evol_algo.evolutionary_optimizer(test_story_forces, 
+                                                        parameters.minimum_wall_thickness, 
+                                                        parameters.maximum_wall_thickness, 
+                                                        parameters.minimum_wall_length, 
+                                                        parameters.maximum_wall_length)
+        print(wall_section)
+
+        return wall_section
