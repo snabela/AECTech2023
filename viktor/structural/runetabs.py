@@ -1,11 +1,11 @@
 import os
 import sys
 import comtypes.client
+import json
 
 # Launch ETABS and get SapModel
 def launchETABS(programPath, modelPath, modelName):
-    if not os.path.exists(modelPath):
-        os.makedirs(modelPath)
+
     ModelPath = modelPath + os.sep + modelName + '.edb'
     helper = comtypes.client.CreateObject('ETABSv1.Helper')
     helper = helper.QueryInterface(comtypes.gen.ETABSv1.cHelper)
@@ -22,9 +22,11 @@ def launchETABS(programPath, modelPath, modelName):
 
     #create SapModel object
     SapModel = myETABSObject.SapModel
-    SapModel.InitializeNewModel()
-    ret = SapModel.File.NewBlank()
+    ret = SapModel.File.OpenFile(ModelPath)
     ret = SapModel.SetPresentUnits(2) # 1 for lb/in, use 2 for lb/ft
+
+    # Save the current model as a new file with the new name
+    ret = SapModel.File.Save(os.path.join(modelPath, 'Test' + '.EDB'))
 
     return SapModel
 
@@ -33,38 +35,42 @@ def cleanUp():
     SapModel = None
     myETABSObject = None
 
-# Read data from Victor File
-def readDataFromViktor(filePath):
-    levelInfo = {}
+# Function to read and process the building structure from a JSON file
+def process_building_structure(file_path):
+    # Dictionaries to store the processed information
     nodeInfo = {}
-    lineInfo = {}
-    areaInfo = {}
-    wallInfo = {}
+    beamInfo = {}
+    floorInfo = {}
+    levelInfo = {}
 
-    with open(filePath, 'r') as file:
-        for line in file:
-            line = line.strip()  # Remove any trailing whitespace
-            if line:  # Skip empty lines
-                parts = line.split(',')
-                identifier = parts[0]  # Get the entire first part to identify the type
+    # Read the JSON file
+    with open(file_path, 'r') as file:
+        data = json.load(file)
 
-                if identifier.startswith('Level'):
-                    level, height = parts[0], float(parts[1])
-                    levelInfo[level] = height
-                elif identifier.startswith('N'):
-                    node, x, y, z = parts[0], float(parts[1]), float(parts[2]), float(parts[3])
-                    nodeInfo[node] = [x, y, z]
-                elif identifier.startswith('L'):
-                    line, node1, node2 = parts[0], parts[1], parts[2]
-                    lineInfo[line] = [node1, node2]
-                elif identifier.startswith('A'):
-                    area, *nodes = parts
-                    areaInfo[area] = nodes
-                elif identifier.startswith('W'):
-                    wall, *nodes = parts
-                    wallInfo[wall] = nodes
+    # Process nodes (assuming every 3 values in the list represent x, y, z coordinates of a node)
+    node_counter = 1
+    for i in range(0, len(data['nodes']), 3):
+        x, y, z = data['nodes'][i:i+3]
+        nodeInfo[node_counter] = [round(float(coord), 3) for coord in [x, y, z]]
+        node_counter += 1
 
-    return levelInfo, nodeInfo, lineInfo, areaInfo, wallInfo
+    # Process beams (assuming each entry in beams is a list of node numbers for that beam)
+    beam_counter = 1
+    for beam_nodes in data['beams']:
+        beamInfo[beam_counter] = [int(node_number) for node_number in beam_nodes]
+        beam_counter += 1
+
+    # Process floors (assuming each entry in floors is a list of node numbers for that floor)
+    floor_counter = 1
+    for floor_nodes in data['floors']:
+        floorInfo[floor_counter] = [int(node_number) for node_number in floor_nodes]
+        floor_counter += 1
+
+    # Infer levels from the unique z values (excluding the base level at z=0)
+    z_values = sorted({coord[2] for coord in nodeInfo.values() if coord[2] > 0})
+    levelInfo = {f"Level{i+1}": round(z, 3) for i, z in enumerate(z_values)}
+
+    return nodeInfo, beamInfo, floorInfo, levelInfo
 
 # Create all data in ETABS
 def createDataInETABS(levelInfo, nodeInfo, lineInfo, floorInfo, wallInfo):
@@ -81,18 +87,10 @@ def createDataInETABS(levelInfo, nodeInfo, lineInfo, floorInfo, wallInfo):
     # Create Lines in ETABS
     for lineName, nodes in lineInfo.items():
         node1, node2 = nodes
-        createLine(SapModel, node1[1:], node2[1:])
+        createLine(SapModel, node1, node2)
 
-    # Create Floors in ETABS
+    # Create Areas (Floors) in ETABS
     for floorName, nodesList in floorInfo.items():
-        # Assuming node names are like 'N1', 'N2', etc., and converting them to integers for ETABS
-        nodesList = [(node[1:]) for node in nodesList]
-        createArea(SapModel, nodesList)
-
-    # Create Floors in ETABS
-    for wallName, nodesList in wallInfo.items():
-        # Assuming node names are like 'N1', 'N2', etc., and converting them to integers for ETABS
-        nodesList = [(node[1:]) for node in nodesList]
         createArea(SapModel, nodesList)
 
 # Create Levels in ETABS
@@ -126,20 +124,16 @@ def createResultsFileforViktor(SapModel):
 # ETABS Installation location
 programPath = 'D:\Computers and Structures\ETABS 21\ETABS.exe'
 
-# Define path of created model
-modelPath = 'D:\Temp'
-modelName = 'Test1'
-
 # Location and name of data from Victor
-dataFileFromVictor = 'D:\\Repo\\AECTech2023\\viktor\\structural\\testData.txt'
+dataFileFromVictor = 'D:\\Repo\\AECTech2023\\viktor\\structural\\building_structure.json'
 
 # Launch ETABS
-SapModel = launchETABS(programPath, modelPath, modelName)
+SapModel = launchETABS(programPath, 'D:\\Repo\\AECTech2023\\viktor\\structural\\analysismodel', 'Template')
 
 # Read data from Victor
-levelInfo, nodeInfo, lineInfo, floorInfo, wallInfo = readDataFromViktor(dataFileFromVictor)
+# levelInfo, nodeInfo, lineInfo, floorInfo, wallInfo = process_building_structure(dataFileFromVictor)
 
-createDataInETABS(levelInfo, nodeInfo, lineInfo, floorInfo, wallInfo)
+# createDataInETABS(levelInfo, nodeInfo, lineInfo, floorInfo, wallInfo)
 
 # TO DO:
 # Applying Supports
