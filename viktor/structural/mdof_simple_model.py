@@ -1,9 +1,8 @@
-def mdof_simple_model(story_force_dictionary, section_dictionary, core_reinforcement_ratio=0.01, drift_limit=0.02):
+def mdof_simple_model(story_force_dictionary, section_dictionary, drift_limit=0.02):
     '''
     Input:
     - story_force_dictionary - dictionary of story forces, with keys as story elevations and values as story forces
-    - section_dictionary - dictionary of core section, with keys as story elevations and values as core dimensions [length, thickness]
-    - core_reinforcement_ratio - ratio of core reinforcement to core area
+    - section_dictionary - dictionary of core section, with keys as story elevations and values as core dimensions [length, thickness, reinforcement_ratio]
     - drift_limit - drift limit for the building: 0.02 for seismic, 0.0025 for wind
     Output:
     - shear_force_dcr - dictionary of story shear capacity demand/capacity ratio
@@ -60,7 +59,7 @@ def mdof_simple_model(story_force_dictionary, section_dictionary, core_reinforce
         '''
         Input: 
         - shear_force_dictionary - dictionary of shear forces, with keys as story elevations and values as shear forces
-        - section_dictionary - dictionary of core section, with keys as story elevations and values as core dimensions [length, thickness]
+        - section_dictionary - dictionary of core section, with keys as story elevations and values as core dimensions [length, thickness, reinforcement_ratio]
 
         Output: shear_capacity_dcr - dictionary of story shear capacity demand/capacity ratio
         '''
@@ -89,11 +88,11 @@ def mdof_simple_model(story_force_dictionary, section_dictionary, core_reinforce
         return shear_capacity_dcr
 
 
-    def check_moment_capacity(moment_dictionary, section_dictionary, core_reinforcement_ratio):
+    def check_moment_capacity(moment_dictionary, section_dictionary):
         '''
         Input : 
         - moment_dictionary - dictionary of moments, with keys as story elevations and values as moments
-        - section_dictionary - dictionary of core section, with keys as story elevations and values as core dimensions [length, thickness]
+        - section_dictionary - dictionary of core section, with keys as story elevations and values as core dimensions [length, thickness, reinforcement_ratio]
         
         Output: moment_capacity_dcr - dictionary of story moment capacity demand/capacity
         '''
@@ -109,6 +108,7 @@ def mdof_simple_model(story_force_dictionary, section_dictionary, core_reinforce
         for z in elevations:
             core_length = section_dictionary[z][0]
             core_thickness = section_dictionary[z][1]
+            core_reinforcement_ratio = section_dictionary[z][2]
             core_flange_area = core_thickness * core_length
         
             flange_reinforcement_area = core_reinforcement_ratio * core_flange_area * 144 # in^2
@@ -217,7 +217,7 @@ def mdof_simple_model(story_force_dictionary, section_dictionary, core_reinforce
     shear_force_dcr = check_shear_capacity(shear_forces, section_dictionary)
     
     # check moment capacity
-    moment_dcr = check_moment_capacity(moments, section_dictionary, core_reinforcement_ratio)
+    moment_dcr = check_moment_capacity(moments, section_dictionary)
 
     # calculate story displacements
     lateral_displacement = cantilever_deflection(moments, section_dictionary)
@@ -230,8 +230,8 @@ def mdof_simple_model(story_force_dictionary, section_dictionary, core_reinforce
 
 if __name__ == "__main__":
 
-    section_dictionary = {0: [20, 1], 10: [20, 1], 20: [20, 1], 30: [20, 1], 40: [20, 1]}
+    section_dictionary = {0: [20, 1, 0.01], 10: [20, 1, 0.01], 20: [20, 1, 0.01], 30: [20, 1, 0.01], 40: [20, 1, 0.01]}
     test_story_forces = {0: 0, 10: 100, 20: 200, 30: 300, 40: 400}    
 
 
-    print(mdof_simple_model(test_story_forces, section_dictionary, 0.01, 0.02))
+    print(mdof_simple_model(test_story_forces, section_dictionary, 0.02))
