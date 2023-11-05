@@ -55,7 +55,7 @@ class Controller(ViktorController):
 
         # generate html content and create the WebResult
         html_content = create_html.create_html(lon, lat)
-        return WebResult(html_content)
+        return WebResult(html=html_content)
 
         # if using static html file
         # html_path = Path(__file__).parent / 'goog_map/map_3d.html'
