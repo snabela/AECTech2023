@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+// CODE IS NOW OBSOLETE
 <head>
   <meta charset="utf-8">
   <title>CesiumJS 3D Tiles Simple Demo</title>
@@ -28,7 +29,7 @@
 
     // Add 3D Tiles tileset
 	const tileset = new Cesium.Cesium3DTileset({
-      url: "https://tile.googleapis.com/v1/3dtiles/root.json?key=secret"
+      url: "https://tile.googleapis.com/v1/3dtiles/root.json?key=UNMASKED_API_KEY_HERE"
     });
 
     viewer.scene.primitives.add(tileset);
@@ -45,9 +46,4 @@
     });
 	
   </script>
-
-  <?php
-    import requests, os
-    $secret = os.getenv("API_KEY")
-  ?>
 </body>

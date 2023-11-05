@@ -1,9 +1,7 @@
-import requests, os
-
-secret = os.getenv("API_KEY")
+import requests
 
 
-def create_html(lon, lat):
+def create_html(lon, lat, secret):
     # Get elevation of chosen point using Goog Elevation API
     def get_elevation(lat, lon):
         response = requests.get(
@@ -54,7 +52,7 @@ def create_html(lon, lat):
         // Point the camera at a specific location
         viewer.scene.camera.setView({
           destination: Cesium.Cartesian3.fromDegrees(
-          """ + str(lon) + "," + str(lat) + "," + str(get_elevation(lat, lon)+250) + """),
+          """ + str(lon) + "," + str(lat) + "," + str(get_elevation(lat, lon) + 250) + """),
           orientation: {
             heading: Cesium.Math.toRadians(45),
             pitch: 0,
