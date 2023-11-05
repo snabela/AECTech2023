@@ -36,10 +36,6 @@ class Parametrization(ViktorParametrization):
     optimization.button = ActionButton('Perform Preliminary Optimization', method='prelim_optimization')
     optimization.button2 = ActionButton('Send Optimized Solution to Analysis Model', method='send_to_analysis')
 
-
-    # TODO add necessary input parameters
-
-
 class Controller(ViktorController):
     label = 'Building'
     parametrization = Parametrization
@@ -89,16 +85,5 @@ class Controller(ViktorController):
         return wall_section
     
     def send_to_analysis(self, params, **kwargs):
-        ## TODO remove test_story_forces
-        parameters = params.optimization
-
-        test_story_forces = {0: 0, 10: parameters.story_forces, 20: parameters.story_forces, 30: parameters.story_forces, 40: parameters.story_forces}
-        wall_section = evol_algo.evolutionary_optimizer(test_story_forces, 
-                                                        parameters.minimum_wall_thickness, 
-                                                        parameters.maximum_wall_thickness, 
-                                                        parameters.minimum_wall_length, 
-                                                        parameters.maximum_wall_length)
-        print(wall_section)
-
-        return wall_section
-
+        ## TODO pass wall_sections to structural analysis
+        pass
