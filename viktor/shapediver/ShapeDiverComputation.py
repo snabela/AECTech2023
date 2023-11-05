@@ -16,7 +16,7 @@ if modelViewUrl is None or len(modelViewUrl) == 0:
 def ShapeDiverComputation(parameters):
  
     # Initialize a session with the model (memoized)
-    shapeDiverSessionSdk = ShapeDiverTinySessionSdkMemoized(ticket, modelViewUrl)
+    shapeDiverSessionSdk = ShapeDiverTinySessionSdkMemoized(ticket, modelViewUrl, forceNewSession = True)
 
     # compute outputs and exports of ShapeDiver model at the same time, 
     # get resulting glTF 2 assets and export assets
