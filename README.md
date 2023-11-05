@@ -1,6 +1,6 @@
 ## Collab-orate
 #### on a 
-## Cool App
+## Cool-app
 #### So the building dosent
 ## Collap-se
 
