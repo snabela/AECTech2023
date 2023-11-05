@@ -7,7 +7,7 @@ import pandas as pd
 import csv
 
 def fetch_usgs_data(latitude, longitude, code,riskCategory, siteClass):
-    
+    code = code.lower()
     if code.startswith('asce7'):
         url = f'https://earthquake.usgs.gov/ws/designmaps/{code}.json?latitude={latitude}&longitude={longitude}&riskCategory={riskCategory}&siteClass={siteClass}&title=Example'
     elif code.startswith('asce41'):
