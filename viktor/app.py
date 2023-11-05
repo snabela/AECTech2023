@@ -9,6 +9,7 @@ from viktor.parametrization import ViktorParametrization, Page, GeoPointField, T
 from viktor.views import MapView, MapResult, MapPoint, GeometryView, GeometryResult, WebView, WebResult, DataView, DataResult, DataGroup, DataItem, PlotlyAndDataResult, PlotlyAndDataView
 from ShapeDiverComputation import ShapeDiverComputation
 from structural import evol_algo
+from viktor.core import Storage
 
 def param_site_class_visible(params, **kwargs):
     if params.structural.code and params.structural.code.lower().startswith('asce7'):
@@ -121,7 +122,8 @@ class Controller(ViktorController):
         #         print(line.strip())
         if params.structural.file_seismic:
             area_height = []
-            for line in params.structural.file_seismic.file.open():
+            # line in params.structural.file_seismic.file.open():
+            for line in Storage().get('BUILDING_FLOOR_ELV_AREA',scope = 'entity').open():
                 line = line.strip()
                 area_height_data = line.split(',')
                 if len(area_height_data)>1:
@@ -129,8 +131,10 @@ class Controller(ViktorController):
 
             if params.structural.tdl and params.structural.tll and params.structural.r_value:
                 print(area_height)
-                story_seismic_loads_dict, seimsic_shear_story_plot, seismic_shear_elevation_plot, seismic_data = seismic.get_seismic_force(area_height,tdl,tll,r,lat,lon,code,risk_cat,site_class)
+                story_seismic_loads_dict, seismic_shear_story_plot, seismic_shear_elevation_plot, seismic_data = seismic.get_seismic_force(area_height,tdl,tll,r,lat,lon,code,risk_cat,site_class)
                 sds = seismic_data['sds']
+                sd1 = seismic_data['sd1']
+                base_shear = seismic_data['base_shear']
             else:
                 sds = 0
         else:
@@ -157,7 +161,7 @@ class Controller(ViktorController):
             )),
             group_c=DataItem('Seismic', 'Demands', subgroup=DataGroup(
                 value_a=DataItem('Sds', sds, suffix='g'),
-                value_b=DataItem('Base Shear', 5000, suffix='kip'),
+                value_b=DataItem('Base Shear', base_shear/1000, suffix='kip'),
                 value_c=DataItem('Overturning Moment', 5000, suffix='kip-ft'),
                 value_d=DataItem('Max Displacement', 5, suffix='in')
             )))
