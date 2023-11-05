@@ -1,3 +1,4 @@
+import os
 import json
 from pathlib import Path
 import plotly.express as px
@@ -5,7 +6,9 @@ import plotly.express as px
 from viktor import ViktorController
 from viktor.core import Storage, File
 from viktor.geometry import GeoPoint
-from viktor.parametrization import ViktorParametrization, Page, GeoPointField, OptionField, NumberField, BooleanField, \
+
+from goog_map import create_html
+from viktor.parametrization import ViktorParametrization, Page, GeoPointField, OptionField, NumberField, BooleanField, Tab, \
     IntegerField, ActionButton, LineBreak, FileField, DownloadButton
 from viktor.result import DownloadResult
 from viktor.views import MapView, MapResult, MapPoint, GeometryView, GeometryResult, WebView, WebResult, \
@@ -31,19 +34,6 @@ class Parametrization(ViktorParametrization):
     location.center = GeoPointField('Building location', default=GeoPoint(40.7182, -74.0162))
 
     geometry = Page('Geometry', views='get_geometry_view')
-    geometry.param0 = NumberField('Base Radius', name='ShapeDiverParams.ff31e6cb-2c58-4d73-b6b1-10e63ba346bb', default=83, min=60, max=200, num_decimals=0, step=1.0, variant='slider')
-    geometry.param1 = NumberField('Peak Radius', name='ShapeDiverParams.5b127d95-8792-4225-ad73-6d958e9fa6ce', default=60, min=60, max=100, num_decimals=0, step=1.0, variant='slider')
-    geometry.param2 = NumberField('No Floors', name='ShapeDiverParams.f86e2cec-4b10-44ca-b42c-e7615be7e784', default=18, min=10, max=50, num_decimals=0, step=1, variant='slider')
-    geometry.param3 = NumberField('Floor to Floor', name='ShapeDiverParams.1125c8f7-8ba9-4b4c-8d17-4a5f2afcea01', default=12, min=8, max=15, num_decimals=0, step=1.0, variant='slider')
-    geometry.param4 = NumberField('Grid Spacing', name='ShapeDiverParams.6488bc66-2a0a-4c32-bfaa-e5e26a79ab49', default=40, min=15, max=45, num_decimals=0, step=1.0, variant='slider')
-    geometry.param5 = BooleanField('Faces', name='ShapeDiverParams.f4ed86ed-aa01-4ef8-a4a1-d52912fca945', default=True)
-    geometry.param6 = BooleanField('Structure', name='ShapeDiverParams.c3d98212-8694-4b6b-9d9a-9fe4fb800670', default=False)
-    geometry.param7 = BooleanField('Floor', name='ShapeDiverParams.b04900a4-2d8f-499d-94d7-d1da11d592b0', default=False)
-
-    geometry.nl = LineBreak()
-    geometry.download1 = DownloadButton('Download BUILDING STRUCTURE', 'download_building_structure')
-    geometry.download2 = DownloadButton('Download BUILDING FLOOR EDGE', 'download_building_floor_edge')
-    geometry.download3 = DownloadButton('Download BUILDING FLOOR ELV AREA', 'download_building_floor_elv_area')
 
     google = Page('Google 3D', views='get_web_view')
 
@@ -120,10 +110,16 @@ class Controller(ViktorController):
         glTF_file = ShapeDiverComputation(parameters)
         return GeometryResult(geometry=glTF_file)
 
-    @WebView('3D Map page-Wen', duration_guess=1)
+    @WebView('3D Tiles Map', duration_guess=1)
     def get_web_view(self, params, **kwargs):
-        html_path = Path(__file__).parent / 'detailedmap_3d.html'
-        return WebResult.from_path(html_path)
+        secret = os.getenv("API_KEY")
+        lat = params.location.center.lat
+        lon = params.location.center.lon
+
+        # generate html content and create the WebResult
+        html_content = create_html.create_html(lon, lat, secret)
+        return WebResult(html=html_content)
+
     
  
     @DataView("OUTPUT", duration_guess=1)
