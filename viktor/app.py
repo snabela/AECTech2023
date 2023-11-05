@@ -28,12 +28,13 @@ class Parametrization(ViktorParametrization):
     structural.wind.code = OptionField('Code', options=['ASCE41', 'ACI'])
 
     optimization = Page('Optimization')
-    optimization.story_forces = IntegerField('Story Forces', min=0)
+    optimization.story_forces = IntegerField('Story Forces', min=0, default=100)
     optimization.minimum_wall_thickness = IntegerField('Minimum Wall Thickness (ft)', min=1, max=3, default=1)
     optimization.maximum_wall_thickness = IntegerField('Maximum Wall Thickness (ft)', min=1, max=3, default=2)
     optimization.minimum_wall_length = IntegerField('Minimum Wall Length (ft)', min=10, max=30, default=20)
     optimization.maximum_wall_length = IntegerField('Maximum Wall Length (ft)', min=15, max=40, default=30)
-    optimization.button = ActionButton('Perform Preliminary Optimization', method='perform_action')
+    optimization.button = ActionButton('Perform Preliminary Optimization', method='prelim_optimization')
+    optimization.button2 = ActionButton('Send Optimized Solution to Analysis Model', method='send_to_analysis')
 
 
     # TODO add necessary input parameters
@@ -73,7 +74,7 @@ class Controller(ViktorController):
         html_path = Path(__file__).parent / 'detailedmap_3d.html'
         return WebResult.from_path(html_path)
     
-    def perform_action(self, params, **kwargs):
+    def prelim_optimization(self, params, **kwargs):
         ## TODO remove test_story_forces
         parameters = params.optimization
 
@@ -84,4 +85,20 @@ class Controller(ViktorController):
                                                         parameters.minimum_wall_length, 
                                                         parameters.maximum_wall_length)
         print(wall_section)
+
+        return wall_section
+    
+    def send_to_analysis(self, params, **kwargs):
+        ## TODO remove test_story_forces
+        parameters = params.optimization
+
+        test_story_forces = {0: 0, 10: parameters.story_forces, 20: parameters.story_forces, 30: parameters.story_forces, 40: parameters.story_forces}
+        wall_section = evol_algo.evolutionary_optimizer(test_story_forces, 
+                                                        parameters.minimum_wall_thickness, 
+                                                        parameters.maximum_wall_thickness, 
+                                                        parameters.minimum_wall_length, 
+                                                        parameters.maximum_wall_length)
+        print(wall_section)
+
+        return wall_section
 
