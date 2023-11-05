@@ -15,9 +15,25 @@ story forces y
 """
 import requests
 from pyproj import Transformer
+import json
 
 WGS84 = "EPSG:4326"  # World Geodetic System 1984 (latitude, longitude)
 WEB_MERCATOR = "EPSG:3857"  # Pseudo Web Mercator (meters)
+
+
+def get_building_data(json_filename):
+    """
+    Get the building data from the given json file
+
+    Parameters:
+    - json_filename (str): The filename of the json file
+
+    Returns:
+    - dict: Dictionary containing all the floors in the building
+    """
+    with open(json_filename, "r") as json_file:
+        floors = json.load(json_file)
+    return floors
 
 
 def get_wind_forces(latitude, longitude, risk_category, floors):
@@ -28,7 +44,7 @@ def get_wind_forces(latitude, longitude, risk_category, floors):
     - latitude (float): The latitude the building is located at
     - longitude (float): The lognitude the building is located at
     - risk_category (int): The risk category of the building (1, 2, 3, or 4)
-    - floors (list[list[list[float]]]): The list of floors in the building
+    - floors (list[]): The list of floors in the building
 
     Returns:
     - tuple: containing the following
@@ -37,7 +53,7 @@ def get_wind_forces(latitude, longitude, risk_category, floors):
         story_forces_x list[float]: list of story forces in X direction starting at lowest floor
         story_forces_y list[float]: list of story forces in Y direction starting at lowest floor
     """
-    h = 0
+    z_last = 0
     story_forces_x = []
     story_forces_y = []
     base_x = 0
@@ -47,19 +63,19 @@ def get_wind_forces(latitude, longitude, risk_category, floors):
     Kd = 0.85
     Ke = 1 #Don't take advantage of elevation factor, future implementation
     for floor in floors[1:]:
-        z = floor[0][2] #Z coordinate of first node in floor area
+        z = floor["points"][0]['z'] #Z coordinate of first node in floor area
         Kz = get_Kz(z)
         qz = 0.00256*Kz*Kzt*Kd*Ke*V*V #Wind pressure
-        width_x, width_y = get_widths(floor)
-        h = z - h
-        area_x = width_x * h
-        area_y = width_y * h
+        width_x, width_y = get_widths(floor["points"])
+        area_x = width_x * (z-z_last)
+        area_y = width_y * (z-z_last)
         force_x = qz*area_x/1000
         force_y = qz*area_y/1000
         story_forces_x.append(force_x)
         story_forces_y.append(force_y)
         base_x += force_x
         base_y += force_y
+        z_last = z
     return base_x, base_y, story_forces_x, story_forces_y
         
 
@@ -68,26 +84,26 @@ def get_widths(floor):
     Given the list of floor nodes, return the maximum width in the x and y projections
 
     Parameters:
-    - floor list[list[float]]: List of nodes that make up floor perimeter that are x, y and z coordinates
+    - floor list[dict[float]]: List of nodes that make up floor perimeter that are x, y and z coordinates
 
     Output:
     - tuple: containing the following
         width_x float: Width of the X projection of the floor
         width_y float: Width of the Y projection of the floor
     """
-    x_min = floor[0][0]
-    x_max = floor[0][0]
-    y_min = floor[0][1]
-    y_max = floor[0][1]
+    x_min = floor[0]['x']
+    x_max = floor[0]['x']
+    y_min = floor[0]['y']
+    y_max = floor[0]['y']
     for node in floor:
-        if node[0] < x_min:
-            x_min = node[0]
-        elif node[0] > x_max:
-            x_max = node[0]
-        if node[1] < y_min:
-            y_min = node[0]
-        elif node[1] > y_max:
-            y_max = node[1]
+        if node['x'] < x_min:
+            x_min = node['x']
+        elif node['x'] > x_max:
+            x_max = node['x']
+        if node['y'] < y_min:
+            y_min = node['x']
+        elif node['y'] > y_max:
+            y_max = node['y']
     width_x = x_max - x_min
     width_y = y_max - y_min
     return width_x, width_y
@@ -189,7 +205,7 @@ def get_story_shears(story_forces):
     """
     Get the story shear forces given the story forces
 
-    Inputs:
+    Parameters:
     - story_forces list[float]: dict of story forces starting at the lowest floor
 
     Returns:
@@ -205,7 +221,8 @@ def get_story_shears(story_forces):
     return story_shears
 
 
-def main(latitude, longitude, risk_category, floors):
+def main(latitude, longitude, risk_category, filename):
+    floors = get_building_data(filename)
     base_x, base_y, story_forces_x, story_forces_y = get_wind_forces(latitude, longitude, risk_category, floors)
     story_shears_x = get_story_shears(story_forces_x)
     story_shears_y = get_story_shears(story_forces_y)
