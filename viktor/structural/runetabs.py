@@ -119,7 +119,7 @@ def createLine(SapModel,node1,node2):
 def createArea(SapModel,nodesList):
     ret = SapModel.AreaObj.AddByPoint(4, nodesList, '')
 
-# TO DO:
+# 
 def createResultsFileforViktor(SapModel):
     print("hello")
 
@@ -142,8 +142,6 @@ levelInfo, nodeInfo, lineInfo, floorInfo, wallInfo = readDataFromViktor(dataFile
 createDataInETABS(levelInfo, nodeInfo, lineInfo, floorInfo, wallInfo)
 
 # TO DO:
-# Adding Load Cases
-# Adding Load Combination
 # Applying Supports
 # Applying loads at all levels
 
