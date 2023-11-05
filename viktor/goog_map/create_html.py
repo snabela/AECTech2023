@@ -63,7 +63,7 @@ def create_html(lon, lat, secret):
         // Point the camera at a specific location
         viewer.scene.camera.setView({
           destination: Cesium.Cartesian3.fromDegrees(
-          """ + str(lon) + "," + str(lat) + "," + str(get_elevation(lat, lon) + 50) + """),
+          """ + str(lon) + "," + str(lat) + "," + str(get_elevation(lat, lon) + 150) + """),
           orientation: {
             heading: Cesium.Math.toRadians(45),
             pitch: Cesium.Math.toRadians(-20),
