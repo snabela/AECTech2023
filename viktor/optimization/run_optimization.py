@@ -15,8 +15,8 @@ def recalculate_cost_and_carbon(params, base_radius, peak_radius, no_floors, flo
     params['ShapeDiverParams']['1125c8f7-8ba9-4b4c-8d17-4a5f2afcea01'] = floor_to_floor
 
     # Run ShapeDiver based on the updated parameters
-    # ShapeDiverComputation(params.ShapeDiverParams)
-    time.sleep(0.5)
+    ShapeDiverComputation(params.ShapeDiverParams)
+    # time.sleep(0.5)
 
     # Load the storage files and update the cost and carbon calculation
     building_structure = json.loads(Storage().get('BUILDING_STRUCTURE', scope='entity').getvalue())
@@ -57,7 +57,10 @@ def run_optimization(params, dimensions):
                     cost, carbon = recalculate_cost_and_carbon(params, base_radius, peak_radius, no_floors, floor_to_floor)
 
                     message = f"Iteration {i}/{n}. \n " \
-                              f"Base radius: {base_radius} \n " \
+                              f"Input parameters: \n " \
+                              f"Base radius: {base_radius}, Peak radius: {peak_radius}, No Floors: {no_floors} Floor to Floor: {floor_to_floor} \n " \
+                              f"Output parameters: \n " \
+                              f"Carbon footprint: {carbon} tonnes CO2 \n Costs: $ {cost}K " \
 
                     progress_message(message=message, percentage=(i / n) * 100)
 
