@@ -1,3 +1,5 @@
+import json
+
 from viktor.core import Storage
 from viktor import File, UserMessage, UserError
 import os
@@ -58,3 +60,28 @@ def ShapeDiverComputation(parameters):
     glTF_file = File.from_url(glTF_url)
 
     return glTF_file
+
+
+def ShapeDiverComputationForOptimization(parameters):
+    # Initialize a session with the model (memoized)
+    shapeDiverSessionSdk = ShapeDiverTinySessionSdkMemoized(ticket, modelViewUrl, forceNewSession=True)
+
+    # compute outputs and exports of ShapeDiver model at the same time,
+    # get resulting glTF 2 assets and export assets
+    result = shapeDiverSessionSdk.export(paramDict=parameters, includeOutputs=True)
+
+    # get resulting exported asset of export called "BUILDING_STRUCTURE"
+    exportItems = result.exportContentItems(exportName="BUILDING_STRUCTURE")
+    if len(exportItems) != 1:
+        UserMessage.warning(f'No exported asset found for export "BUILDING_STRUCTURE".')
+    else:
+        BUILDING_STRUCTURE = json.loads(File.from_url(exportItems[0]['href']).getvalue())
+
+    # get resulting exported asset of export called "BUILDING_FLOOR_ELV_AREA"
+    exportItems = result.exportContentItems(exportName="BUILDING_FLOOR_ELV_AREA")
+    if len(exportItems) != 1:
+        UserMessage.warning(f'No exported asset found for export "BUILDING_FLOOR_ELV_AREA".')
+    else:
+        BUILDING_FLOOR_ELV_AREA = json.loads(File.from_url(exportItems[0]['href']).getvalue())
+
+    return BUILDING_STRUCTURE, BUILDING_FLOOR_ELV_AREA

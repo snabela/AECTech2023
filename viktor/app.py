@@ -97,6 +97,8 @@ class Parametrization(ViktorParametrization):
     global_optimization.min_floor_to_floor = NumberField('Min Floor to Floor', default=8)
     global_optimization.max_floor_to_floor = NumberField('Max Floor to Floor', default=15)
     global_optimization.step_floor_to_floor = NumberField('Step Floor to Floor', default=1)
+    global_optimization.run_async = BooleanField('Run Asynchronously')
+    global_optimization.number_of_workers = NumberField('Number of parallel workers', default=4)
 
 
 class Controller(ViktorController):
