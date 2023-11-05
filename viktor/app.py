@@ -130,7 +130,7 @@ class Controller(ViktorController):
 
             if params.structural.tdl and params.structural.tll and params.structural.r_value:
                 print(area_height)
-                story_seismic_loads_dict, seimsic_shear_story_plot, seismic_shear_elevation_plot, seismic_data = seismic.get_seismic_force(area_height,tdl,tll,r,lat,lon,code,risk_cat,site_class)
+                story_seismic_loads_dict, seismic_shear_story_plot, seismic_shear_elevation_plot, seismic_data = seismic.get_seismic_force(area_height,tdl,tll,r,lat,lon,code,risk_cat,site_class)
                 sds = seismic_data['sds']
                 sd1 = seismic_data['sd1']
                 base_shear = seismic_data['base_shear']
