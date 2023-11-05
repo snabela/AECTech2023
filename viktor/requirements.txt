@@ -1,2 +1,5 @@
 viktor==14.6.1
-requests==2.31.0
+requests
+numpy
+plotly
+pandas
