@@ -48,7 +48,18 @@ def create_html(lon, lat, secret):
         });
     
         viewer.scene.primitives.add(tileset);
-    
+        
+        // Add 3D building model
+        const modelEntity = viewer.entities.add({
+            name: "Building Model",
+            position: Cesium.Cartesian3.fromDegrees(lon, lat, get_elevation(lat, lon)),
+            orientation: Cesium.Quaternion.IDENTITY,
+            model: {
+                url: "path/to/your-model.gltf", // URL to GLTF model
+                scale: 1.0,
+            },
+        });
+
         // Point the camera at a specific location
         viewer.scene.camera.setView({
           destination: Cesium.Cartesian3.fromDegrees(
