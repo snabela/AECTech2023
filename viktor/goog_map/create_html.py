@@ -1,5 +1,19 @@
+import requests
+
 def create_html(lon, lat):
 
+    # Get elevation of chosen point using Goog Elevation API
+    def get_elevation(lat, lon):
+        response = requests.get(
+            f'https://maps.googleapis.com/maps/api/elevation/json?locations={lat},{lon}&key=AIzaSyC5aJ5Z0Popy3TXC9qJBp2Au6jNVCcRAiA'
+        )
+        data = response.json()
+
+        if data.get('status') == 'OK':
+            elevation = data['results'][0]['elevation']
+            return elevation
+
+    # HTML content
     html_text = """<!DOCTYPE html>
     <head>
       <meta charset="utf-8">
@@ -37,7 +51,8 @@ def create_html(lon, lat):
     
         // Point the camera at a specific location
         viewer.scene.camera.setView({
-          destination: Cesium.Cartesian3.fromDegrees(""" + str(lon) + "," + str(lat) + """, 250),
+          destination: Cesium.Cartesian3.fromDegrees(""" + str(lon) + "," + str(lat) + "," +\
+                str(get_elevation(lat, lon)+250) + """),
           orientation: {
             heading: Cesium.Math.toRadians(45),
             pitch: 0,

@@ -12,7 +12,6 @@ class Parametrization(ViktorParametrization):
     location.center = GeoPointField('Building location', default=GeoPoint(40.7182, -74.0162))
 
     geometry = Page('Geometry', views='get_geometry_view')
-    # TODO add necessary input parameters
 
     google = Page('Google 3D', views='get_web_view')
 
@@ -21,7 +20,6 @@ class Parametrization(ViktorParametrization):
     structural.wind.code = OptionField('Code', options=['ASCE41', 'ACI'])
 
     optimization = Page('Optimization')
-    # TODO add necessary input parameters
 
 
 class Controller(ViktorController):
@@ -43,12 +41,13 @@ class Controller(ViktorController):
         # TODO integrate with ShapeDiver
 
         geometry = File.from_url(
-            "https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/CesiumMilkTruck/glTF-Binary/CesiumMilkTruck.glb")
+            "https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/CesiumMilkTruck/glTF-Binary"
+            "/CesiumMilkTruck.glb")
         return GeometryResult(geometry)
 
     @WebView('3D Map page-Wen', duration_guess=1)
     def get_web_view(self, params, **kwargs):
-        # if using dynamic html file (dynamic lat and long)
+        # if you want to use a dynamic html file with variable lon and lat
         lat = params.location.center.lat
         lon = params.location.center.lon
         #  = Path(__file__).parent / 'goog_map/create_html.py'
@@ -57,6 +56,6 @@ class Controller(ViktorController):
         html_content = create_html.create_html(lon, lat)
         return WebResult(html=html_content)
 
-        # if using static html file
+        # if you want to use a static html file with hardcoded lon and lat
         # html_path = Path(__file__).parent / 'goog_map/map_3d.html'
         # return WebResult.from_path(html_path)
