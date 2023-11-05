@@ -58,7 +58,7 @@ def get_wind_forces(latitude, longitude, risk_category, floors):
     story_forces_y = {}
     base_x = 0
     base_y = 0
-    V = get_wind_speed_for_risk(latitude, longitude, risk_category)
+    V = get_wind_speed(latitude, longitude, risk_category)
     Kzt = 1 #Kzt can be adjusted for local topography, future implementation
     Kd = 0.85
     Ke = 1 #Don't take advantage of elevation factor, future implementation
@@ -127,7 +127,7 @@ def get_Kz(z):
         return 2.01*(z/zg)**(2/a)
     
 
-def get_wind_speed_for_risk(latitude, longitude, risk_category):
+def get_wind_speed(latitude, longitude, risk_category):
     """
     Get the ultimate wind speed based on the latitude, longitude and the risk category
 
@@ -139,7 +139,7 @@ def get_wind_speed_for_risk(latitude, longitude, risk_category):
     Returns:
     - float: Design wind speed
     """
-    wind_speed_dict = get_wind_speed(latitude, longitude)
+    wind_speed_dict = get_wind_speed_list(latitude, longitude)
     if risk_category == 1:
         return_period = 300
     elif risk_category == 2:
@@ -151,7 +151,7 @@ def get_wind_speed_for_risk(latitude, longitude, risk_category):
     return wind_speed_dict[return_period]
 
 
-def get_wind_speed(latitude, longitude, server_url='https://gis.asce.org'):
+def get_wind_speed_list(latitude, longitude, server_url='https://gis.asce.org'):
     """
     Fetch wind speed for given latitude and longitude from the provided server URL.
     
@@ -224,6 +224,16 @@ def get_story_shears(story_forces):
 
     return story_shears
 
+
+def get_story_shear_plot(story_forces):
+    story_shears = get_story_shears
+    story_shear_plot = []
+    story_shear_plot.append(story_shears[0])
+    for val in story_shears[1:]:
+        story_shear_plot.append(val)
+        story_shear_plot.append(val)
+    return story_shear_plot
+    
 
 def main(latitude, longitude, risk_category, filename):
     floors = get_building_data(filename)

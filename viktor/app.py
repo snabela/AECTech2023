@@ -1,6 +1,7 @@
 from pathlib import Path
 import plotly.graph_objects as go
 from seismic import  get_asce7_seismic_loads as seismic
+from wind import get_asce7_wind_loads as wind
 
 from viktor import ViktorController, File, UserMessage
 from viktor.geometry import GeoPoint
@@ -135,15 +136,23 @@ class Controller(ViktorController):
         else:
             sds=0
 
+        if params.structural.file_wind:
+            floors = wind.get_building_data(params.structural.file_wind)
+            wind_speed = wind.get_wind_speed(lat, lon, risk_cat)
+            base_x, base_y, story_forces_x, story_forces_y = wind.get_wind_forces(lat, lon, risk_cat, floors)
+            wind_story_shear_plot_x = wind.get_story_shear_plot(story_forces_x)
+            wind_story_shear_plot_y = wind.get_story_shear_plot(story_forces_y)
+            #Use the same elevation plots from seismic
+
         data = DataGroup(
             group_a=DataItem('Location', 'Coordinate', subgroup=DataGroup(
                 value_a=DataItem('Latitude',lat, suffix='°'),
                 value_b=DataItem('Longitudinal', lon, suffix='°')
             )),
             group_b=DataItem('Wind', 'Demands', subgroup=DataGroup(
-                value_a=DataItem('Wind Pressure', 1, suffix='psf',explanation_label='this value is the wind pressure value based on building code'),
-                value_b=DataItem('Base Shear',5000,suffix='kip'),
-                value_c=DataItem('Overturning Moment', 5000, suffix='kip-ft'),
+                value_a=DataItem('Wind Speed', wind_speed, suffix='psf',explanation_label='this value is the wind speed value based on building code'),
+                value_b=DataItem('Base Shear X',base_x,suffix='kip'),
+                value_c=DataItem('Base Shear Y', base_y, suffix='kip-ft'), 
                 value_d=DataItem('Max Displacement', 5, suffix='in')
             )),
             group_c=DataItem('Seismic', 'Demands', subgroup=DataGroup(
