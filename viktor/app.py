@@ -180,7 +180,6 @@ class Controller(ViktorController):
         return PlotlyAndDataResult(fig.to_json(), data)
 
     def run_etabs(self, params, **kwargs):
-
         file_content1 = Storage().get('BUILDING_STRUCTURE', scope='entity')
         file_content2 = Storage().get('BUILDING_STRUCTURE', scope='entity')
 
@@ -188,7 +187,7 @@ class Controller(ViktorController):
 
         # Run the analysis and obtain the output file
         generic_analysis = GenericAnalysis(files=files, executable_key="run_etabs", output_filenames=["output.json"])
-        generic_analysis.execute(timeout=120)
+        generic_analysis.execute(timeout=6000)
         output_file = generic_analysis.get_output_file("output.json")
         print(output_file)
 
