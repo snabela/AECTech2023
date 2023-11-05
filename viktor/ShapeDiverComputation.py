@@ -44,6 +44,9 @@ def ShapeDiverComputation(parameters):
     if len(contentItemsGltf2) > 1: 
         UserMessage.warning(f'Computation resulted in {len(contentItemsGltf2)} glTF 2.0 assets, only displaying the first one.')
 
-    glTF_file = File.from_url(contentItemsGltf2[0]['href'])
+    glTF_url = contentItemsGltf2[0]['href']
+    Storage().set('GLTF_URL', data=File.from_data(glTF_url), scope='entity')
+
+    glTF_file = File.from_url(glTF_url)
 
     return glTF_file
