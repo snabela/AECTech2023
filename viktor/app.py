@@ -1,8 +1,9 @@
+import json
 from pathlib import Path
 import plotly.express as px
 
 from viktor import ViktorController
-from viktor.core import Storage
+from viktor.core import Storage, File
 from viktor.geometry import GeoPoint
 from viktor.parametrization import ViktorParametrization, Page, GeoPointField, OptionField, NumberField, BooleanField, \
     IntegerField, ActionButton, LineBreak, FileField, DownloadButton
