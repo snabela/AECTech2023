@@ -2,9 +2,10 @@ from pathlib import Path
 
 from viktor import ViktorController, File, UserMessage
 from viktor.geometry import GeoPoint
-from viktor.parametrization import ViktorParametrization, Page, GeoPointField, Tab, OptionField, NumberField, BooleanField, IntegerField
+from viktor.parametrization import ViktorParametrization, Page, GeoPointField, Tab, OptionField, NumberField, BooleanField, IntegerField, ActionButton
 from viktor.views import MapView, MapResult, MapPoint, GeometryView, GeometryResult, WebView, WebResult
 from ShapeDiverComputation import ShapeDiverComputation
+from structural import evol_algo
 
 class Parametrization(ViktorParametrization):
     location = Page('Location', views='get_map_view')
@@ -28,8 +29,11 @@ class Parametrization(ViktorParametrization):
 
     optimization = Page('Optimization')
     optimization.story_forces = IntegerField('Story Forces', min=0)
-    optimization.minimum_wall_thickness = IntegerField('Minimum Wall Thickness (ft)', min=1)
-    optimization.maximum_wall_thickness = IntegerField('Maximum Wall Thickness (ft)', min=1)
+    optimization.minimum_wall_thickness = IntegerField('Minimum Wall Thickness (ft)', min=1, max=3, default=1)
+    optimization.maximum_wall_thickness = IntegerField('Maximum Wall Thickness (ft)', min=1, max=3, default=2)
+    optimization.minimum_wall_length = IntegerField('Minimum Wall Length (ft)', min=10, max=30, default=20)
+    optimization.maximum_wall_length = IntegerField('Maximum Wall Length (ft)', min=15, max=40, default=30)
+    optimization.button = ActionButton('Perform Preliminary Optimization', method='perform_action')
 
     # TODO add necessary input parameters
 
@@ -67,3 +71,10 @@ class Controller(ViktorController):
     def get_web_view(self, params, **kwargs):
         html_path = Path(__file__).parent / 'detailedmap_3d.html'
         return WebResult.from_path(html_path)
+    
+    def perform_action(self, params, **kwargs):
+        ## TODO remove test_story_forces
+        test_story_forces = {0: 0, 10: params.story_forces, 20: params.story_forces, 30: params.story_forces, 40: params.story_forces}
+
+        evol_algo.evolutionary_optimizer(test_story_forces, params.minimum_wall_thickness, params.maximum_wall_thickness, params.minimum_wall_length, params.maximum_wall_length)
+        return UserMessage.info('Optimization completed')
