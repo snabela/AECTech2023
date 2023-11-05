@@ -81,22 +81,6 @@ def process_building_structure(file_path):
         else:
             print(f"Column {column_counter} uses nodes {nodes} at the same z level, which is unusual for a column.")
         column_counter += 1
-
-    # # Process floors (assuming each entry in floors is a list of node numbers for that floor)
-    # floor_counter = 1
-    # for floor_nodes in data['floors']:
-    #     nodes = [int(node_number) + 1 for node_number in floor_nodes]  # Adjust node numbering
-    #     # Check if any node's z-coordinate is 0, skip the floor
-    #     if any(nodeInfo[node][2] == 0 for node in nodes):
-    #         continue
-    #     # Check if all z-coordinates are the same for the floor
-    #     if len(set(nodeInfo[node][2] for node in nodes)) != 1:
-    #         print(f"Warning: Floor {floor_counter} has nodes at different z levels.")
-    #     # Check if the number of nodes is less than 3 or more than 4
-    #     if not 3 <= len(nodes) <= 4:
-    #         print(f"Warning: Floor {floor_counter} has an invalid number of nodes: {len(nodes)}.")
-    #     floorInfo[floor_counter] = nodes
-    #     floor_counter += 1
     
     # Group nodes by elevation
     elevation_groups = {}
@@ -206,17 +190,9 @@ SapModel = launchETABS(programPath, 'D:\\Repo\\AECTech2023\\viktor\\structural\\
 
 createDataInETABS(nodeInfo, beamInfo, columnInfo, floorInfo, levelInfo)
 
-# TO DO:
-# Applying Supports
-# Applying loads at all levels
-
 # Run Analysis
-# Create Results file for Victor
+ret = SapModel.Analyze.RunAnalysis()
 
-# readDataFromVictor(dataFileFromVictor)
 cleanUp()
-
-
-
 
 
