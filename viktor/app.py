@@ -33,9 +33,9 @@ class Parametrization(ViktorParametrization):
     geometry = Page('Geometry', views='get_geometry_view')
     geometry.param0 = NumberField('Base Radius', name='ShapeDiverParams.ff31e6cb-2c58-4d73-b6b1-10e63ba346bb', default=83, min=60, max=200, num_decimals=0, step=1.0, variant='slider')
     geometry.param1 = NumberField('Peak Radius', name='ShapeDiverParams.5b127d95-8792-4225-ad73-6d958e9fa6ce', default=60, min=60, max=100, num_decimals=0, step=1.0, variant='slider')
-    geometry.param2 = NumberField('No Floors', name='ShapeDiverParams.f86e2cec-4b10-44ca-b42c-e7615be7e784', default=48, min=10, max=50, num_decimals=0, step=1, variant='slider')
+    geometry.param2 = NumberField('No Floors', name='ShapeDiverParams.f86e2cec-4b10-44ca-b42c-e7615be7e784', default=18, min=10, max=50, num_decimals=0, step=1, variant='slider')
     geometry.param3 = NumberField('Floor to Floor', name='ShapeDiverParams.1125c8f7-8ba9-4b4c-8d17-4a5f2afcea01', default=12, min=8, max=15, num_decimals=0, step=1.0, variant='slider')
-    geometry.param4 = NumberField('Grid Spacing', name='ShapeDiverParams.6488bc66-2a0a-4c32-bfaa-e5e26a79ab49', default=18, min=15, max=25, num_decimals=0, step=1.0, variant='slider')
+    geometry.param4 = NumberField('Grid Spacing', name='ShapeDiverParams.6488bc66-2a0a-4c32-bfaa-e5e26a79ab49', default=40, min=15, max=45, num_decimals=0, step=1.0, variant='slider')
     geometry.param5 = BooleanField('Faces', name='ShapeDiverParams.f4ed86ed-aa01-4ef8-a4a1-d52912fca945', default=True)
     geometry.param6 = BooleanField('Structure', name='ShapeDiverParams.c3d98212-8694-4b6b-9d9a-9fe4fb800670', default=False)
     geometry.param7 = BooleanField('Floor', name='ShapeDiverParams.b04900a4-2d8f-499d-94d7-d1da11d592b0', default=False)
@@ -69,8 +69,7 @@ class Parametrization(ViktorParametrization):
     optimization.maximum_wall_length = IntegerField('Maximum Wall Length (ft)', min=15, max=40, default=30)
     optimization.button = ActionButton('Perform Preliminary Optimization', method='prelim_optimization')
 
-    #concrete_embodied_carbon = calculate_embodied_carbon.calculate_embodied_carbon_concrete(concrete_volume)
-    #reinforcement_embodied_carbon = calculate_embodied_carbon.calculate_embodied_carbon_reinforcement(reinforcement_volume)
+
 
     optimization.button2 = ActionButton('Send Optimized Solution to Analysis Model', method='send_to_analysis')
 
@@ -97,6 +96,8 @@ class Parametrization(ViktorParametrization):
     global_optimization.min_floor_to_floor = NumberField('Min Floor to Floor', default=8)
     global_optimization.max_floor_to_floor = NumberField('Max Floor to Floor', default=15)
     global_optimization.step_floor_to_floor = NumberField('Step Floor to Floor', default=1)
+    global_optimization.run_async = BooleanField('Run Asynchronously')
+    global_optimization.number_of_workers = NumberField('Number of parallel workers', default=4)
 
 
 class Controller(ViktorController):
@@ -127,19 +128,23 @@ class Controller(ViktorController):
     def prelim_optimization(self, params, **kwargs):
         ## TODO remove test_story_forces
         parameters = params.optimization
-
+        #building_forces = Storage().get('building_forces', scope='entity')
         test_story_forces = {0: 0, 10: parameters.story_forces, 20: parameters.story_forces, 30: parameters.story_forces, 40: parameters.story_forces}
-        wall_section = evol_algo.evolutionary_optimizer(test_story_forces, 
-                                                        parameters.minimum_wall_thickness, 
-                                                        parameters.maximum_wall_thickness, 
-                                                        parameters.minimum_wall_length, 
-                                                        parameters.maximum_wall_length)
-        print(wall_section)
-        return wall_section
+        best_result, data = evol_algo.evolutionary_optimizer(test_story_forces, 
+                                                parameters.minimum_wall_thickness, 
+                                                parameters.maximum_wall_thickness, 
+                                                parameters.minimum_wall_length, 
+                                                parameters.maximum_wall_length)
+        print(best_result)
+        data_file = File.from_data(data)
+        data_content = data_file.getvalue_binary()
+        optimized_corewall = Storage().set('OPTIMIZED_COREWALL', data=data_content, scope='entity')
+
 
     @PlotlyAndDataView("OUTPUT", duration_guess=5)
     def structural_base_analysis(self, params, **kwargs):
         fig, data = base_analysis(params)
+        Storage().set('building_forces', data=data, scope='entity')
         return PlotlyAndDataResult(fig.to_json(), data)
     
     def send_to_analysis(self, params, **kwargs):
